@@ -1,5 +1,13 @@
-﻿@*
+﻿@model AMS.Models.Faculty
+@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
 }
+<form method="post" action="SaveFaculty">
+    <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" class="form-control" id="name" aria-describedby="emailHelp" placeholder="Enter Name">
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

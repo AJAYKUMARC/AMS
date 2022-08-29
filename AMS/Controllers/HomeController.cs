@@ -34,9 +34,9 @@ namespace AMS.Controllers
             try
             {
                 //create the user
-                await Auth.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
+                await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 //log in the new user
-                var fbAuthLink = await Auth
+                var fbAuthLink = await AuthProvider
                                 .SignInWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 string token = fbAuthLink.FirebaseToken;
                 //saving the token in a session variable
@@ -70,7 +70,7 @@ namespace AMS.Controllers
             try
             {
                 //log in the user
-                var fbAuthLink = await Auth
+                var fbAuthLink = await AuthProvider
                                 .SignInWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 string token = fbAuthLink.FirebaseToken;
                 //saving the token in a session variable

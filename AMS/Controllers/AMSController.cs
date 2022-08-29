@@ -1,4 +1,6 @@
 ﻿using AMS.Models;
+using Firebase.Auth;
+using FireSharp.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AMS.Controllers
@@ -35,6 +37,27 @@ namespace AMS.Controllers
 
         public IActionResult SaveCourse(Course course)
         {
+            try
+            {
+                var data = course;
+                PushResponse response = FireSharpClient.Push("Courses/", course);
+                course.Id = response.Result.name;
+                SetResponse setResponse = FireSharpClient.Set("Courses/" + course.Id, course);
+
+                if (setResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    ModelState.AddModelError(string.Empty, "Added Succesfully");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Something went wrong!!");
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
             return View();
         }
 
@@ -89,13 +112,13 @@ namespace AMS.Controllers
             return new List<Course_Section_Faculty>();
         }
 
-        public bool RegisterFacultyWithCourse(Course_Section_Faculty data)
+        public IActionResult RegisterFacultyWithCourse(Course_Section_Faculty data)
         {
             if (data == null)
             {
-                return false;
+                return View();
             }
-            return true;
+            return View();
         }
         #endregion FacultyRegistration
 
@@ -111,13 +134,13 @@ namespace AMS.Controllers
             return new List<Course_Section_Faculty>();
         }
 
-        public bool RegisterStudentWithCourse(Student_Course_Registration data)
+        public IActionResult RegisterStudentWithCourse(Student_Course_Registration data)
         {
             if (data == null)
             {
-                return false;
+                return View();
             }
-            return true;
+            return View();
         }
         #endregion StudentCourseRegistration
     }
