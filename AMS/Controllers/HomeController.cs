@@ -6,14 +6,8 @@ using Newtonsoft.Json;
 
 namespace AMS.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
-        FirebaseAuthProvider auth;
-        public HomeController()
-        {
-            auth = new FirebaseAuthProvider(
-                                   new FirebaseConfig("AIzaSyA2xZlUvq_97_Z3UGnqUGH0JSvarqE-Y4c"));
-        }
 
         public IActionResult Index()
         {
@@ -28,7 +22,6 @@ namespace AMS.Controllers
             }
         }
 
-
         public IActionResult Register()
         {
             return View();
@@ -41,9 +34,9 @@ namespace AMS.Controllers
             try
             {
                 //create the user
-                await auth.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
+                await Auth.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 //log in the new user
-                var fbAuthLink = await auth
+                var fbAuthLink = await Auth
                                 .SignInWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 string token = fbAuthLink.FirebaseToken;
                 //saving the token in a session variable
@@ -77,7 +70,7 @@ namespace AMS.Controllers
             try
             {
                 //log in the user
-                var fbAuthLink = await auth
+                var fbAuthLink = await Auth
                                 .SignInWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 string token = fbAuthLink.FirebaseToken;
                 //saving the token in a session variable
@@ -98,7 +91,7 @@ namespace AMS.Controllers
                 ModelState.AddModelError(String.Empty, firebaseEx.error.message);
                 return View(userModel);
             }
-          
+
         }
 
         public IActionResult LogOut()
