@@ -1,15 +1,19 @@
 ﻿using AMS.Models;
+using AMS.Services;
 using Firebase.Auth;
 using FireSharp.Response;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
+using System.Text.Json;
 
 namespace AMS.Controllers
 {
     public class AMSController : BaseController
     {
-        public AMSController()
+        private readonly IDbOperations dbOperations;
+        public AMSController(IDbOperations dbOperations)
         {
-
+            this.dbOperations = dbOperations;
         }
 
         #region Section
@@ -23,9 +27,17 @@ namespace AMS.Controllers
             return View();
         }
 
-        public IList<Section> GetSection()
+        public async Task<IList<Section>> GetSection()
         {
-            return new List<Section>();
+            try
+            {
+                var result = await dbOperations.GetAllData<Section>("Section");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
         #endregion Section
 
@@ -35,35 +47,36 @@ namespace AMS.Controllers
             return View();
         }
 
-        public IActionResult SaveCourse(Course course)
+        public async Task<Course?> SaveCourse(Course course)
         {
             try
             {
-                var data = course;
-                PushResponse response = FireSharpClient.Push("Courses/", course);
-                course.Id = response.Result.name;
-                SetResponse setResponse = FireSharpClient.Set("Courses/" + course.Id, course);
 
-                if (setResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                var result = await dbOperations.SaveData(course, "Course");
+                if (result == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Added Succesfully");
+
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Something went wrong!!");
-                }
+                return result;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<IList<Course>> GetCourse()
+        {
+            try
+            {
+                var result = await dbOperations.GetAllData<Course>("Course");
+                return result;
             }
             catch (Exception ex)
             {
-
                 throw;
             }
-            return View();
-        }
 
-        public IList<Course> GetCourse()
-        {
-            return new List<Course>();
         }
         #endregion Course
 
@@ -73,14 +86,35 @@ namespace AMS.Controllers
             return View();
         }
 
-        public IActionResult SaveFaculty(Faculty faculty)
+        public async Task<Faculty> SaveFaculty(Faculty faculty)
         {
-            return View();
+            try
+            {
+
+                var result = await dbOperations.SaveData(faculty, "Faculty");
+                if (result == null)
+                {
+
+                }
+                return result;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public IList<Faculty> GetFaculty()
+        public async Task<IList<Faculty>> GetFaculty()
         {
-            return new List<Faculty>();
+            try
+            {
+                var result = await dbOperations.GetAllData<Faculty>("Faculty");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
         #endregion Faculty
 
@@ -90,14 +124,34 @@ namespace AMS.Controllers
             return View();
         }
 
-        public IActionResult SaveStudent(Student student)
+        public async Task<Student> SaveStudent(Student student)
         {
-            return View();
+            try
+            {
+                var result = await dbOperations.SaveData(student, "Student");
+                if (result == null)
+                {
+
+                }
+                return result;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public IList<Student> GetStudent()
+        public async Task<IList<Student>> GetStudent()
         {
-            return new List<Student>();
+            try
+            {
+                var result = await dbOperations.GetAllData<Student>("Student");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
         #endregion Student
 
@@ -107,18 +161,34 @@ namespace AMS.Controllers
             return View();
         }
 
-        public List<Course_Section_Faculty> GetFacultyRegistration()
+        public async Task<List<Course_Section_Faculty>> GetFacultyRegistration()
         {
-            return new List<Course_Section_Faculty>();
+            try
+            {
+                var result = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
-        public IActionResult RegisterFacultyWithCourse(Course_Section_Faculty data)
+        public async Task<Course_Section_Faculty> RegisterFacultyWithCourse(Course_Section_Faculty data)
         {
-            if (data == null)
+            try
             {
-                return View();
+                var result = await dbOperations.SaveData(data, "Course_Section_Faculty");
+                if (result == null)
+                {
+
+                }
+                return result;
             }
-            return View();
+            catch (Exception)
+            {
+                throw;
+            }
         }
         #endregion FacultyRegistration
 
@@ -129,18 +199,34 @@ namespace AMS.Controllers
             return View();
         }
 
-        public List<Course_Section_Faculty> GetStudentCourseRegistration()
+        public async Task<List<Student_Course_Registration>> GetStudentCourseRegistration()
         {
-            return new List<Course_Section_Faculty>();
+            try
+            {
+                var result = await dbOperations.GetAllData<Student_Course_Registration>("Course_Section_Faculty");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
-        public IActionResult RegisterStudentWithCourse(Student_Course_Registration data)
+        public async Task<Student_Course_Registration> RegisterStudentWithCourse(Student_Course_Registration data)
         {
-            if (data == null)
+            try
             {
-                return View();
+                var result = await dbOperations.SaveData(data, "Student_Course_Registration");
+                if (result == null)
+                {
+
+                }
+                return result;
             }
-            return View();
+            catch (Exception)
+            {
+                throw;
+            }
         }
         #endregion StudentCourseRegistration
     }

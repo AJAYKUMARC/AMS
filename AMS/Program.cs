@@ -1,9 +1,12 @@
+using AMS.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddMvc().AddSessionStateTempDataProvider();
 builder.Services.AddSession();
+builder.Services.AddScoped<IDbOperations, DbOperations>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
