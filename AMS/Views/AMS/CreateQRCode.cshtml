@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "www.compilemode.com";
+}
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <img src="@ViewBag.QrCodeUri" class="img-thumbnail" style="
+    HEIGHT: auto;
+    WIDTH: 80px;
+" />
+    </div>
+</div>
+@section Scripts {
+    @{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+}

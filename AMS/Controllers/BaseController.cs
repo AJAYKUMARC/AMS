@@ -10,7 +10,7 @@ namespace AMS.Controllers
 
         public static string firebaseDatabaseUrl = "https://attendancemngtsys-default-rtdb.firebaseio.com/";
 
-        public static readonly HttpClient client = new HttpClient();
+       
         public string APIKey = "AIzaSyA2xZlUvq_97_Z3UGnqUGH0JSvarqE-Y4c";
         public string APISecret = "zlotpxJesn9ktlahVwq8AEPY5dflLI18gPmI1xeX";
         public string BasePath = "https://attendancemngtsys-default-rtdb.firebaseio.com";

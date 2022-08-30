@@ -1,19 +1,21 @@
 ﻿using AMS.Models;
 using AMS.Services;
-using Firebase.Auth;
-using FireSharp.Response;
+using AMS.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using System.Text;
-using System.Text.Json;
+using QRCoder;
+using System.Drawing;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace AMS.Controllers
 {
     public class AMSController : BaseController
     {
         private readonly IDbOperations dbOperations;
-        public AMSController(IDbOperations dbOperations)
+        private readonly IHttpContextAccessor httpContextAccessor;
+        public AMSController(IDbOperations dbOperations, IHttpContextAccessor httpContextAccessor)
         {
             this.dbOperations = dbOperations;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         #region Section
@@ -22,9 +24,21 @@ namespace AMS.Controllers
             return View();
         }
 
-        public IActionResult SaveSection(Section section)
+        public async Task<Section> SaveSection(Section section)
         {
-            return View();
+            try
+            {
+                var result = await dbOperations.SaveData(section, "Section");
+                if (result == null)
+                {
+
+                }
+                return result;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public async Task<IList<Section>> GetSection()
@@ -51,7 +65,6 @@ namespace AMS.Controllers
         {
             try
             {
-
                 var result = await dbOperations.SaveData(course, "Course");
                 if (result == null)
                 {
@@ -193,7 +206,6 @@ namespace AMS.Controllers
         #endregion FacultyRegistration
 
         #region StudentCourseRegistration
-
         public IActionResult StudentRegistration()
         {
             return View();
@@ -229,5 +241,43 @@ namespace AMS.Controllers
             }
         }
         #endregion StudentCourseRegistration
+
+        #region Attendance
+        public async Task<Students_Attendance> ShowAttendance()
+        {
+            return new Students_Attendance();
+        }
+
+        public async Task<Students_Attendance> MarkAttendance(string uid)
+        {
+            return new Students_Attendance();
+        }
+
+        public async Task<Students_Attendance> UpdateAttendance()
+        {
+            return new Students_Attendance();
+        }
+        #endregion Attendance
+
+
+        #region QRCode
+        [HttpGet]
+        public IActionResult CreateQRCode()
+        {
+            var queryParameter = Guid.NewGuid().ToString("N");
+            var url = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + "/AMS/MarkAttendance?uid=" + queryParameter;
+            string WebUri = new Uri(url).ToString();
+            string UriPayload = WebUri.ToString();
+            QRCodeGenerator QrGenerator = new();
+            QRCodeData QrCodeInfo = QrGenerator.CreateQrCode(UriPayload, QRCodeGenerator.ECCLevel.Q);
+            QRCode QrCode = new QRCode(QrCodeInfo);
+            Bitmap QrBitmap = QrCode.GetGraphic(60);
+            byte[] BitmapArray = QrBitmap.BitmapToByteArray();
+            string QrUri = string.Format("data:image/png;base64,{0}", Convert.ToBase64String(BitmapArray));
+            ViewBag.QrCodeUri = QrUri;
+            return View();
+        }
+
+        #endregion QRCode
     }
 }

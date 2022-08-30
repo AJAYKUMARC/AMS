@@ -7,6 +7,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddMvc().AddSessionStateTempDataProvider();
 builder.Services.AddSession();
 builder.Services.AddScoped<IDbOperations, DbOperations>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
