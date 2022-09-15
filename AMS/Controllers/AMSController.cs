@@ -259,7 +259,6 @@ namespace AMS.Controllers
         }
         #endregion Attendance
 
-
         #region QRCode
         [HttpGet]
         public IActionResult CreateQRCode()

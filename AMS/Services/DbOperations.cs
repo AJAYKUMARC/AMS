@@ -7,8 +7,10 @@ namespace AMS.Services
     public class DbOperations : IDbOperations
     {
 
-        public static string firebaseDatabaseUrl = "https://attendancemngtsys-default-rtdb.firebaseio.com/";
+        //public static string firebaseDatabaseUrl = "https://attendancemngtsys-default-rtdb.firebaseio.com/";
+        public static string firebaseDatabaseUrl = "https://attendance-tracking-system-ft-default-rtdb.firebaseio.com/";
 
+       
         /// <summary>
         /// Save's the Data 
         /// </summary>
