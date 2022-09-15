@@ -18,6 +18,7 @@ namespace AMS.Controllers
         {
             this.dbOperations = dbOperations;
         }
+
         [Authorize]
         public IActionResult Index()
         {
@@ -81,22 +82,25 @@ namespace AMS.Controllers
         {
             try
             {
+                var facultyList = await dbOperations.GetAllData<Faculty>("Faculty");
+                if (facultyList != null && facultyList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
+                {
+                    //User Already Exist
+                }
                 //create the user
-                await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
+                var regResult = await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 //log in the new user
-                var fbAuthLink = await AuthProvider
-                                .SignInWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
-                string token = fbAuthLink.FirebaseToken;
-                //saving the token in a session variable
-                if (token != null)
+
+                var faculty = new Faculty
                 {
-                    HttpContext.Session.SetString("_UserToken", token);
-                    return RedirectToAction("Index");
-                }
-                else
-                {
-                    return View();
-                }
+                    Email = userModel.Email,
+                    Name = userModel.UserName
+                };
+
+                var result = await dbOperations.SaveData(faculty, "Faculty");
+
+                return RedirectToAction("SignIn");
+
             }
             catch (FirebaseAuthException ex)
             {
@@ -134,35 +138,25 @@ namespace AMS.Controllers
                     var authProperties = new AuthenticationProperties
                     {
                         AllowRefresh = true,
-                        // Refreshing the authentication session should be allowed.
-
                         ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(25),
-                        // The time at which the authentication ticket expires. A 
-                        // value set here overrides the ExpireTimeSpan option of 
-                        // CookieAuthenticationOptions set with AddCookie.
-
-                        IsPersistent = true,
-                        // Whether the authentication session is persisted across 
-                        // multiple requests. When used with cookies, controls
-                        // whether the cookie's lifetime is absolute (matching the
-                        // lifetime of the authentication ticket) or session-based.
-
                         IssuedUtc = DateTime.UtcNow,
-                        // The time at which the authentication ticket was issued.
-
                         RedirectUri = Url.Action("Index", "Home")
-                        // The full path or absolute URI to be used as an http 
-                        // redirect response value.
                     };
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-
+                    var studentList = await dbOperations.GetAllData<Student>("Student");
+                    var userName = string.Empty;
+                    if (studentList != null && studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
+                    {
+                        userName = studentList.FirstOrDefault(x => x.Email?.ToLower() == userModel.Email.ToLower()).Name;
+                    }
                     HttpContext.Session.SetString("_UserToken", token);
-
+                    HttpContext.Session.SetString("UserName", userName ?? "");
+                    HttpContext.Session.SetString("UserType", "Studnet");
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    return View();
+                    return RedirectToAction("SignIn");
                 }
             }
             catch (FirebaseAuthException ex)
@@ -200,42 +194,35 @@ namespace AMS.Controllers
                     var authProperties = new AuthenticationProperties
                     {
                         AllowRefresh = true,
-                        // Refreshing the authentication session should be allowed.
-
                         ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(25),
-                        // The time at which the authentication ticket expires. A 
-                        // value set here overrides the ExpireTimeSpan option of 
-                        // CookieAuthenticationOptions set with AddCookie.
-
                         IsPersistent = true,
-                        // Whether the authentication session is persisted across 
-                        // multiple requests. When used with cookies, controls
-                        // whether the cookie's lifetime is absolute (matching the
-                        // lifetime of the authentication ticket) or session-based.
-
                         IssuedUtc = DateTime.UtcNow,
-                        // The time at which the authentication ticket was issued.
-
                         RedirectUri = Url.Action("Index", "Home")
-                        // The full path or absolute URI to be used as an http 
-                        // redirect response value.
                     };
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-
+                    var facultyList = await dbOperations.GetAllData<Faculty>("Faculty");
+                    var userName = string.Empty;
+                    if (facultyList != null && facultyList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
+                    {
+                        userName = facultyList.FirstOrDefault(x => x.Email?.ToLower() == userModel.Email.ToLower()).Name;
+                    }
                     HttpContext.Session.SetString("_UserToken", token);
-
+                    HttpContext.Session.SetString("UserName", userName);
+                    HttpContext.Session.SetString("UserType", "Faculty");
                     return RedirectToAction("Index");
                 }
                 else
                 {
-                    return View();
+                    //Need to show Fail Message
+                    return RedirectToAction("SignIn");
                 }
             }
             catch (FirebaseAuthException ex)
             {
                 var firebaseEx = JsonConvert.DeserializeObject<FirebaseError>(ex.ResponseData);
                 ModelState.AddModelError(String.Empty, firebaseEx.error.message);
-                return View(userModel);
+                //Need to show Fail Message
+                return RedirectToAction("SignIn");
             }
 
         }

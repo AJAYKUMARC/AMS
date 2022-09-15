@@ -1,13 +1,13 @@
 ﻿using AMS.Models;
 using AMS.Services;
-using AMS.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using QRCoder;
 using System.Drawing;
-using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AMS.Controllers
 {
+    [Authorize]
     public class AMSController : BaseController
     {
         private readonly IDbOperations dbOperations;
