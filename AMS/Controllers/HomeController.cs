@@ -19,6 +19,10 @@ namespace AMS.Controllers
             this.dbOperations = dbOperations;
         }
 
+        /// <summary>
+        /// This page is shown after login of a faculty or student.
+        /// </summary>
+        /// <returns></returns>
         [Authorize]
         public IActionResult Index()
         {
@@ -33,11 +37,20 @@ namespace AMS.Controllers
             }
         }
 
+        /// <summary>
+        /// Shows Registration page for the Student
+        /// </summary>
+        /// <returns></returns>
         public IActionResult Register()
         {
             return View();
         }
 
+        /// <summary>
+        /// Process the Registration of a Student
+        /// </summary>
+        /// <param name="userModel"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> RegisterUser(Models.User userModel)
         {
@@ -72,11 +85,20 @@ namespace AMS.Controllers
 
         }
 
+        /// <summary>
+        /// Shows login page for faculty
+        /// </summary>
+        /// <returns></returns>
         public IActionResult RegisterFaculty()
         {
             return View();
         }
 
+        /// <summary>
+        /// Process the Registration of a faculty
+        /// </summary>
+        /// <param name="userModel"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> RegisterFaculty(Models.User userModel)
         {
@@ -111,11 +133,20 @@ namespace AMS.Controllers
 
         }
 
+        /// <summary>
+        /// Shows Login page for a student
+        /// </summary>
+        /// <returns></returns>
         public IActionResult SignIn()
         {
             return View();
         }
 
+        /// <summary>
+        /// Process the Login of a studnet
+        /// </summary>
+        /// <param name="userModel"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> SignInUser(Models.User userModel)
         {
@@ -168,10 +199,20 @@ namespace AMS.Controllers
 
         }
 
+        /// <summary>
+        /// Shows the login page of a faculty
+        /// </summary>
+        /// <returns></returns>
         public IActionResult SignInFaculty()
         {
             return View();
         }
+
+        /// <summary>
+        /// Process the Login of a faculty
+        /// </summary>
+        /// <param name="userModel"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> SignInFaculty(Models.User userModel)
         {
@@ -227,6 +268,10 @@ namespace AMS.Controllers
 
         }
 
+        /// <summary>
+        /// Process the logout of a user (student/faculty)
+        /// </summary>
+        /// <returns></returns>
         public async Task<IActionResult> LogOut()
         {
             HttpContext.Session.Remove("_UserToken");
