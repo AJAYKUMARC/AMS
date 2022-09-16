@@ -60,16 +60,17 @@ namespace AMS.Controllers
                 var studentList = await dbOperations.GetAllData<Student>("Student");
                 if (studentList != null && studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                 {
+                    //User Already Exist
+                    //Return to Registration Page and say that email aready exist.
                     ViewData["Invalid"] = "Email Already Exist..!";
                     return View("Register");
-                    //User Already Exist
-                    //Return to UI and say that email aready exist.
                 }
 
                 //Talks with Firebase Auth process and creates the user with provided userId and password.
                 var regResult = await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 if (regResult == null || regResult?.FirebaseToken == null)
                 {
+                    // If something went wrong on firebase then we wil show below message
                     ViewData["Invalid"] = "Some thing went wrong..!";
                     return View("Register");
                 }
@@ -119,11 +120,12 @@ namespace AMS.Controllers
                 var facultyList = await dbOperations.GetAllData<Faculty>("Faculty");
                 if (facultyList != null && facultyList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                 {
+                    //User Already Exist
                     ViewData["Invalid"] = "Email Already Exist..!";
                     return View("RegisterFaculty");
-                    //User Already Exist
+
                 }
-                //create the user
+
                 var regResult = await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
                 if (regResult == null || regResult?.FirebaseToken == null)
                 {
