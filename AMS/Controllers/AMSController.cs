@@ -137,7 +137,7 @@ namespace AMS.Controllers
             return View();
         }
 
-        public async Task<Student> SaveStudent(Student student)
+        public async Task<IActionResult> SaveStudent(Student student)
         {
             try
             {
@@ -146,7 +146,7 @@ namespace AMS.Controllers
                 {
 
                 }
-                return result;
+                return View("Student");
             }
             catch (Exception)
             {
@@ -154,12 +154,12 @@ namespace AMS.Controllers
             }
         }
 
-        public async Task<IList<Student>> GetStudent()
+        public async Task<IActionResult> GetStudent()
         {
             try
             {
                 var result = await dbOperations.GetAllData<Student>("Student");
-                return result;
+                return View();
             }
             catch (Exception ex)
             {
@@ -174,12 +174,12 @@ namespace AMS.Controllers
             return View();
         }
 
-        public async Task<List<Course_Section_Faculty>> GetFacultyRegistration()
+        public async Task<IActionResult> GetFacultyRegistration()
         {
             try
             {
                 var result = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
-                return result;
+                return View();
             }
             catch (Exception ex)
             {
@@ -187,7 +187,7 @@ namespace AMS.Controllers
             }
         }
 
-        public async Task<Course_Section_Faculty> RegisterFacultyWithCourse(Course_Section_Faculty data)
+        public async Task<IActionResult> RegisterFacultyWithCourse(Course_Section_Faculty data)
         {
             try
             {
@@ -196,7 +196,7 @@ namespace AMS.Controllers
                 {
 
                 }
-                return result;
+                return RedirectToAction("GetFacultyRegistration");
             }
             catch (Exception)
             {
@@ -211,12 +211,12 @@ namespace AMS.Controllers
             return View();
         }
 
-        public async Task<List<Student_Course_Registration>> GetStudentCourseRegistration()
+        public async Task<IActionResult> GetStudentCourseRegistration()
         {
             try
             {
                 var result = await dbOperations.GetAllData<Student_Course_Registration>("Course_Section_Faculty");
-                return result;
+                return View();
             }
             catch (Exception ex)
             {
@@ -224,7 +224,7 @@ namespace AMS.Controllers
             }
         }
 
-        public async Task<Student_Course_Registration> RegisterStudentWithCourse(Student_Course_Registration data)
+        public async Task<IActionResult> RegisterStudentWithCourse(Student_Course_Registration data)
         {
             try
             {
@@ -233,7 +233,7 @@ namespace AMS.Controllers
                 {
 
                 }
-                return result;
+                return RedirectToAction("GetStudentCourseRegistration");
             }
             catch (Exception)
             {
@@ -276,7 +276,12 @@ namespace AMS.Controllers
             ViewBag.QrCodeUri = QrUri;
             return View();
         }
-
         #endregion QRCode
+
+        public IActionResult MyProfile()
+        {
+            return View();
+        }
+
     }
 }
