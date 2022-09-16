@@ -7,10 +7,9 @@ namespace AMS.Services
     public class DbOperations : IDbOperations
     {
 
-        //public static string firebaseDatabaseUrl = "https://attendancemngtsys-default-rtdb.firebaseio.com/";
         public static string firebaseDatabaseUrl = "https://attendance-tracking-system-ft-default-rtdb.firebaseio.com/";
 
-       
+
         /// <summary>
         /// Save's the Data 
         /// </summary>
@@ -28,7 +27,7 @@ namespace AMS.Services
                 var payload = new StringContent(courseJsonString, Encoding.UTF8, "application/json");
 
                 string url = $"{firebaseDatabaseUrl}" +
-                            $"{dbDocument}/" +
+                            $"{dbDocument}/" + //student,faculty,course,section
                             $"{data.Id}.json";
                 HttpClient client = new();
                 var httpResponseMessage = await client.PutAsync(url, payload);
@@ -140,7 +139,7 @@ namespace AMS.Services
             try
             {
                 string url = $"{firebaseDatabaseUrl}" +
-                       $"{dbDocument}.json";
+                       $"{dbDocument}.json";//studnet,course,section
                 HttpClient client = new();
                 var httpResponseMessage = await client.GetAsync(url);
                 List<T> entries = new();

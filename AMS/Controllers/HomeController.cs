@@ -56,21 +56,30 @@ namespace AMS.Controllers
         {
             try
             {
+                //The next three lines of code is for validating the user is already exist or not.
                 var studentList = await dbOperations.GetAllData<Student>("Student");
                 if (studentList != null && studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                 {
                     //User Already Exist
+                    //Return to UI and say that email aready exist.
                 }
-                //create the user
-                var regResult = await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
-                //log in the new user
 
+                //Talks with Firebase Auth process and creates the user with provided userId and password.
+                var regResult = await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
+                if (regResult == null || regResult.FirebaseToken == null)
+                {
+                    //if registration fail 
+                    //Return and say registration failed.
+                }
+
+                //Creating the student model to be saved in database
                 var student = new Student
                 {
                     Email = userModel.Email,
                     Name = userModel.UserName
                 };
 
+                //Save the student in the student table.
                 var result = await dbOperations.SaveData(student, "Student");
 
                 return RedirectToAction("SignIn");
