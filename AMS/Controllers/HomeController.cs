@@ -60,16 +60,18 @@ namespace AMS.Controllers
                 var studentList = await dbOperations.GetAllData<Student>("Student");
                 if (studentList != null && studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                 {
+                    ViewData["Invalid"] = "Email Already Exist..!";
+                    return View("Register");
                     //User Already Exist
                     //Return to UI and say that email aready exist.
                 }
 
                 //Talks with Firebase Auth process and creates the user with provided userId and password.
                 var regResult = await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
-                if (regResult == null || regResult.FirebaseToken == null)
+                if (regResult == null || regResult?.FirebaseToken == null)
                 {
-                    //if registration fail 
-                    //Return and say registration failed.
+                    ViewData["Invalid"] = "Some thing went wrong..!";
+                    return View("Register");
                 }
 
                 //Creating the student model to be saved in database
@@ -81,15 +83,16 @@ namespace AMS.Controllers
 
                 //Save the student in the student table.
                 var result = await dbOperations.SaveData(student, "Student");
-
-                return RedirectToAction("SignIn");
+                ViewData["Valid"] = "Registered Successfully.";
+                return View("Register");
             }
 
             catch (FirebaseAuthException ex)
             {
                 var firebaseEx = JsonConvert.DeserializeObject<FirebaseError>(ex.ResponseData);
                 ModelState.AddModelError(String.Empty, firebaseEx.error.message);
-                return View(userModel);
+                ViewData["Invalid"] = "Some thing went wrong..!";
+                return View("Register");
             }
 
         }
@@ -116,12 +119,17 @@ namespace AMS.Controllers
                 var facultyList = await dbOperations.GetAllData<Faculty>("Faculty");
                 if (facultyList != null && facultyList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                 {
+                    ViewData["Invalid"] = "Email Already Exist..!";
+                    return View("RegisterFaculty");
                     //User Already Exist
                 }
                 //create the user
                 var regResult = await AuthProvider.CreateUserWithEmailAndPasswordAsync(userModel.Email, userModel.Password);
-                //log in the new user
-
+                if (regResult == null || regResult?.FirebaseToken == null)
+                {
+                    ViewData["Invalid"] = "Some thing went wrong..!";
+                    return View("RegisterFaculty");
+                }
                 var faculty = new Faculty
                 {
                     Email = userModel.Email,
@@ -129,15 +137,16 @@ namespace AMS.Controllers
                 };
 
                 var result = await dbOperations.SaveData(faculty, "Faculty");
-
-                return RedirectToAction("SignIn");
+                ViewData["Valid"] = "Registered Successfully.";
+                return View("RegisterFaculty");
 
             }
             catch (FirebaseAuthException ex)
             {
                 var firebaseEx = JsonConvert.DeserializeObject<FirebaseError>(ex.ResponseData);
                 ModelState.AddModelError(String.Empty, firebaseEx.error.message);
-                return View(userModel);
+                ViewData["Invalid"] = "Some thing went wrong..!";
+                return View("RegisterFaculty");
             }
 
         }
@@ -196,14 +205,16 @@ namespace AMS.Controllers
                 }
                 else
                 {
-                    return RedirectToAction("SignIn");
+                    ViewData["Invalid"] = "Fail to login";
+                    return View("SignIn");
                 }
             }
             catch (FirebaseAuthException ex)
             {
                 var firebaseEx = JsonConvert.DeserializeObject<FirebaseError>(ex.ResponseData);
                 ModelState.AddModelError(String.Empty, firebaseEx.error.message);
-                return View(userModel);
+                ViewData["Invalid"] = "Fail to login";
+                return View("SignIn");
             }
 
         }
@@ -264,15 +275,16 @@ namespace AMS.Controllers
                 else
                 {
                     //Need to show Fail Message
-                    return RedirectToAction("SignIn");
+                    ViewData["Invalid"] = "Fail to login";
+                    return View("SignInFaculty");
                 }
             }
             catch (FirebaseAuthException ex)
             {
                 var firebaseEx = JsonConvert.DeserializeObject<FirebaseError>(ex.ResponseData);
                 ModelState.AddModelError(String.Empty, firebaseEx.error.message);
-                //Need to show Fail Message
-                return RedirectToAction("SignIn");
+                ViewData["Invalid"] = "Fail to login";
+                return View("SignInFaculty");
             }
 
         }
