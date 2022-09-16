@@ -179,6 +179,12 @@ namespace AMS.Controllers
                 //saving the token in a session variable
                 if (token != null)
                 {
+                    var studentList = await dbOperations.GetAllData<Student>("Student");
+                    if (!studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
+                    {
+                        ViewData["Invalid"] = "Fail to login";
+                        return View("SignIn");
+                    }
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, userModel.Email),
@@ -194,7 +200,7 @@ namespace AMS.Controllers
                         RedirectUri = Url.Action("Index", "Home")
                     };
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-                    var studentList = await dbOperations.GetAllData<Student>("Student");
+
                     var userName = string.Empty;
                     if (studentList != null && studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                     {
@@ -247,6 +253,12 @@ namespace AMS.Controllers
                 //saving the token in a session variable
                 if (token != null)
                 {
+                    var facultyList = await dbOperations.GetAllData<Faculty>("Faculty");
+                    if (!facultyList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
+                    {
+                        ViewData["Invalid"] = "Fail to login";
+                        return View("SignInFaculty");
+                    }
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, userModel.Email),
@@ -263,7 +275,6 @@ namespace AMS.Controllers
                         RedirectUri = Url.Action("Index", "Home")
                     };
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-                    var facultyList = await dbOperations.GetAllData<Faculty>("Faculty");
                     var userName = string.Empty;
                     if (facultyList != null && facultyList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                     {
