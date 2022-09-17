@@ -24,11 +24,18 @@ namespace AMS.Controllers
         /// </summary>
         /// <returns></returns>
         [Authorize]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var token = HttpContext.Session.GetString("_UserToken");
             if (token != null)
             {
+                var email = HttpContext.Session.GetString("UserEmail");
+                var pinDetails = await dbOperations.GetAllData<UPIN>("UPIN");
+                if (pinDetails != null && pinDetails.Count > 0)
+                {
+                    var userPIN = pinDetails.FirstOrDefault(x => x.Email.Equals(email, StringComparison.OrdinalIgnoreCase))?.PIN ?? 0000;
+                    HttpContext.Session.SetInt32("UserPIN", userPIN);
+                }
                 return View();
             }
             else
@@ -180,7 +187,7 @@ namespace AMS.Controllers
                 if (token != null)
                 {
                     var studentList = await dbOperations.GetAllData<Student>("Student");
-                    if (!studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
+                    if (!studentList.Any(x => x.Email.Equals(userModel.Email, StringComparison.OrdinalIgnoreCase)))
                     {
                         ViewData["Invalid"] = "Fail to login";
                         return View("SignIn");
@@ -208,6 +215,7 @@ namespace AMS.Controllers
                     }
                     HttpContext.Session.SetString("_UserToken", token);
                     HttpContext.Session.SetString("UserName", userName ?? "");
+                    HttpContext.Session.SetString("UserEmail", userModel.Email ?? "");
                     HttpContext.Session.SetString("UserType", "Studnet");
                     return RedirectToAction("Index");
                 }
@@ -282,6 +290,7 @@ namespace AMS.Controllers
                     }
                     HttpContext.Session.SetString("_UserToken", token);
                     HttpContext.Session.SetString("UserName", userName);
+                    HttpContext.Session.SetString("UserEmail", userModel.Email ?? "");
                     HttpContext.Session.SetString("UserType", "Faculty");
                     return RedirectToAction("Index");
                 }

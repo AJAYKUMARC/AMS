@@ -283,5 +283,25 @@ namespace AMS.Controllers
             return View();
         }
 
+        #region PIN
+        public async Task<IActionResult> CreatedPIN(int pin)
+        {
+            UPIN pinDetails = new()
+            {
+                Email = HttpContext.Session.GetString("UserEmail"),
+                PIN = pin
+            };
+            var result = await dbOperations.SaveData<UPIN>(pinDetails, "UPIN");
+            return View();
+        }
+        public async Task<int> GetPIN()
+        {
+            var email = HttpContext.Session.GetString("UserEmail");
+            var pinDetails = await dbOperations.GetAllData<UPIN>("UPIN");
+            var pin = pinDetails.FirstOrDefault(x => x.Email.Equals(email))?.PIN;
+            return pin ?? 0000;
+        }
+        #endregion PIN
+
     }
 }
