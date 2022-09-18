@@ -6,6 +6,7 @@ using System.Drawing;
 using Microsoft.AspNetCore.Authorization;
 using AMS.ViewModels;
 using AMS.ViewModels.Faculty;
+using AMS.ViewModels.Student;
 
 namespace AMS.Controllers
 {
@@ -210,14 +211,17 @@ namespace AMS.Controllers
                 Course_Section_Faculty data = new() { };
                 var courseList = await dbOperations.GetAllData<Course>("Course");
                 var sectionList = await dbOperations.GetAllData<Section>("Section");
-                if (courseList != null && courseList.Count > 0 && sectionList != null && sectionList.Count > 0)
+                var facultyList = await dbOperations.GetAllData<Faculty>("Faculty");
+                if (courseList != null && courseList.Count > 0 && sectionList != null && sectionList.Count > 0 && facultyList != null && facultyList.Count > 0)
                 {
+                    var facultyInfo = facultyList.FirstOrDefault(x => x.Email == HttpContext.Session.GetString("UserEmail"));
                     var selectedCourse = courseList.FirstOrDefault(x => x.Name == courseViewModel.CName);
                     var selectedSection = sectionList.FirstOrDefault(x => x.Name == courseViewModel.SName);
-                    if (selectedCourse != null && selectedSection != null)
+                    if (selectedCourse != null && selectedSection != null && facultyInfo != null)
                     {
                         data.Course = selectedCourse;
                         data.Section = selectedSection;
+                        data.Faculty = facultyInfo;
                     }
                 }
                 if (data.Course == null || data.Section == null)
@@ -241,9 +245,33 @@ namespace AMS.Controllers
         #endregion FacultyRegistration
 
         #region StudentCourseRegistration
-        public IActionResult StudentRegistration()
+        public async Task<IActionResult> StudentRegistration()
         {
-            return View();
+            var scheduledCourses = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+            var courseRegistered = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+            IList<StudentRegistrationViewModel> studentRegistrationViewModel = new List<StudentRegistrationViewModel>();
+            foreach (var sCourse in scheduledCourses)
+            {
+                if (courseRegistered.Any(x => x.Course.Equals(sCourse)))
+                {
+                    StudentRegistrationViewModel studentRegistration = new()
+                    {
+                        Course_Section_Faculty = sCourse,
+                        IsRegistered = true
+                    };
+                    studentRegistrationViewModel.Add(studentRegistration);
+                }
+                else
+                {
+                    StudentRegistrationViewModel studentRegistration = new()
+                    {
+                        Course_Section_Faculty = sCourse,
+                        IsRegistered = false
+                    };
+                    studentRegistrationViewModel.Add(studentRegistration);
+                }
+            }
+            return View(studentRegistrationViewModel);
         }
 
         public async Task<IActionResult> GetStudentCourseRegistration()
