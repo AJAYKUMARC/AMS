@@ -252,11 +252,17 @@ namespace AMS.Controllers
             IList<StudentRegistrationViewModel> studentRegistrationViewModel = new List<StudentRegistrationViewModel>();
             foreach (var sCourse in scheduledCourses)
             {
-                if (courseRegistered.Any(x => x.Course.Equals(sCourse)))
+                if (courseRegistered.Any(x => x.Course.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase)))
                 {
+                    var courseRegisteredId = courseRegistered.FirstOrDefault(x => x.Course.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase))?.Id;
+                    if(courseRegisteredId == null)
+                    {
+                        return View(studentRegistrationViewModel);
+                    }
                     StudentRegistrationViewModel studentRegistration = new()
                     {
                         Course_Section_Faculty = sCourse,
+                        CourseRegisteredId= courseRegisteredId,
                         IsRegistered = true
                     };
                     studentRegistrationViewModel.Add(studentRegistration);
@@ -287,16 +293,62 @@ namespace AMS.Controllers
             }
         }
 
-        public async Task<IActionResult> RegisterStudentWithCourse(Student_Course_Registration data)
+        public async Task<IActionResult> RegisterStudentWithCourse(string data)
         {
             try
             {
-                var result = await dbOperations.SaveData(data, "Student_Course_Registration");
+                if (data == null)
+                {
+                    //Fail Message
+                    return RedirectToAction("StudentRegistration", "AMS");
+                }
+                Student_Course_Registration student_Course_Registration = new Student_Course_Registration();
+                var course_Section_Faculty = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+                var studentList = await dbOperations.GetAllData<Student>("Student");
+                var selectedCourse_Section_Faculty = course_Section_Faculty.FirstOrDefault(x => x.Id == data);
+                if (selectedCourse_Section_Faculty != null && studentList.Count > 0)
+                {
+                    var student = studentList.FirstOrDefault(x => x.Email.Equals(HttpContext.Session.GetString("UserEmail"), StringComparison.OrdinalIgnoreCase));
+                    if (student != null)
+                    {
+                        student_Course_Registration.Course = selectedCourse_Section_Faculty;
+                        student_Course_Registration.Student = student;
+                    }
+                }
+                if (student_Course_Registration.Student == null || student_Course_Registration.Course == null)
+                {
+                    //Message with Error
+                    return RedirectToAction("StudentRegistration");
+                }
+                var result = await dbOperations.SaveData(student_Course_Registration, "Student_Course_Registration");
                 if (result == null)
                 {
-
+                    //Message with Error
+                    return RedirectToAction("StudentRegistration");
                 }
-                return RedirectToAction("GetStudentCourseRegistration");
+                return RedirectToAction("StudentRegistration");
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<IActionResult> CancelRegisterOfCourse(string data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    //Message with Error
+                    return RedirectToAction("StudentRegistration");
+                }
+                var result = await dbOperations.DeleteData(data, "Student_Course_Registration");
+                if (!result)
+                {
+                    //Message with Error
+                    return RedirectToAction("StudentRegistration");
+                }
+                return RedirectToAction("StudentRegistration");
             }
             catch (Exception)
             {

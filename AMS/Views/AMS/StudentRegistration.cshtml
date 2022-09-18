@@ -41,13 +41,12 @@
                                 @if (listItem.IsRegistered)
                                 {
                                     <td>Registered</td>
-                                    <td><a asp-action="ViewRegCourseDetails" asp-controller="AMS" asp-route-data="@listItem.Course_Section_Faculty.Id" class="link-primary">Cancel</a></td>
+                                    <td><a asp-action="CancelRegisterOfCourse" asp-controller="AMS" asp-route-data="@listItem.CourseRegisteredId" class="link-primary">Cancel</a></td>
                                 }
                                 else
                                 {
                                     <td>--</td>
-                                    <td><a asp-action="ViewRegCourseDetails" asp-controller="AMS" asp-route-data="@listItem.Course_Section_Faculty.Id" class="link-primary">Register</a></td>
-
+                                    <td><a asp-action="RegisterStudentWithCourse" asp-controller="AMS" asp-route-data="@listItem.Course_Section_Faculty.Id" class="link-primary">Register</a></td>
                                 }
                             </tr>
                         }
