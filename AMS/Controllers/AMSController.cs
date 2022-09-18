@@ -177,11 +177,12 @@ namespace AMS.Controllers
             var courseList = await dbOperations.GetAllData<Course>("Course");
             var sectionList = await dbOperations.GetAllData<Section>("Section");
             var registrationList = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+            var facultyEmail = HttpContext.Session.GetString("UserEmail");
             FacultyRegistrationViewModel data = new()
             {
                 Courses = courseList,
                 Sections = sectionList,
-                RegistrationList = registrationList
+                RegistrationList = registrationList.Where(x => x.Faculty.Email.Equals(facultyEmail, StringComparison.OrdinalIgnoreCase)).ToList()
             };
             return View(data);
         }
@@ -190,8 +191,20 @@ namespace AMS.Controllers
         {
             try
             {
-                var result = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
-                return View();
+                ViewDetails viewDetails = new();
+                var facultyRegList = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+                var selectedCourseDetails = facultyRegList.FirstOrDefault(x => x.Id == data);
+                var attendanceLise = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+                if (selectedCourseDetails != null)
+                {
+                    viewDetails = new ViewDetails
+                    {
+                        Course_Section_Faculty = selectedCourseDetails,
+                        AttendanceList = attendanceLise.Where(x => x.Student_Course_Registration.Course_Section_Faculty.Id == data).ToList()
+                    };
+                }
+
+                return View(viewDetails);
             }
             catch (Exception ex)
             {
@@ -242,6 +255,7 @@ namespace AMS.Controllers
                 throw;
             }
         }
+
         #endregion FacultyRegistration
 
         #region StudentCourseRegistration
@@ -252,8 +266,8 @@ namespace AMS.Controllers
             IList<StudentRegistrationViewModel> studentRegistrationViewModel = new List<StudentRegistrationViewModel>();
             foreach (var sCourse in scheduledCourses)
             {
-                var data = courseRegistered.FirstOrDefault(x => x.Course.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase) && x.Course.Faculty.Id.Equals(sCourse.Faculty.Id, StringComparison.OrdinalIgnoreCase) && x.Course.Section.Id.Equals(sCourse.Section.Id, StringComparison.OrdinalIgnoreCase));
-                if (data != null)
+                var data = courseRegistered.FirstOrDefault(x => x.Course_Section_Faculty.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Faculty.Id.Equals(sCourse.Faculty.Id, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Section.Id.Equals(sCourse.Section.Id, StringComparison.OrdinalIgnoreCase));
+                if (courseRegistered.Count > 0 && data != null)
                 {
                     var courseRegisteredId = data.Id;
                     if (courseRegisteredId == null)
@@ -281,19 +295,6 @@ namespace AMS.Controllers
             return View(studentRegistrationViewModel);
         }
 
-        public async Task<IActionResult> GetStudentCourseRegistration()
-        {
-            try
-            {
-                var result = await dbOperations.GetAllData<Student_Course_Registration>("Course_Section_Faculty");
-                return View();
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-
         public async Task<IActionResult> RegisterStudentWithCourse(string data)
         {
             try
@@ -312,11 +313,11 @@ namespace AMS.Controllers
                     var student = studentList.FirstOrDefault(x => x.Email.Equals(HttpContext.Session.GetString("UserEmail"), StringComparison.OrdinalIgnoreCase));
                     if (student != null)
                     {
-                        student_Course_Registration.Course = selectedCourse_Section_Faculty;
+                        student_Course_Registration.Course_Section_Faculty = selectedCourse_Section_Faculty;
                         student_Course_Registration.Student = student;
                     }
                 }
-                if (student_Course_Registration.Student == null || student_Course_Registration.Course == null)
+                if (student_Course_Registration.Student == null || student_Course_Registration.Course_Section_Faculty == null)
                 {
                     //Message with Error
                     return RedirectToAction("StudentRegistration");
@@ -334,6 +335,7 @@ namespace AMS.Controllers
                 throw;
             }
         }
+
         public async Task<IActionResult> CancelRegisterOfCourse(string data)
         {
             try
@@ -359,16 +361,57 @@ namespace AMS.Controllers
         #endregion StudentCourseRegistration
 
         #region Attendance
+
         public async Task<Students_Attendance> ShowAttendance()
         {
             return new Students_Attendance();
         }
 
-        public async Task<Students_Attendance> MarkAttendance(string uid)
+        public async Task<IActionResult> MarkAttendance(string uid)
         {
-            return new Students_Attendance();
+            ViewBag.CId = uid;
+            return View();
         }
 
+        public async Task<IActionResult> SubmitAttendance(SubmitAttendanceViewModel data)
+        {
+            try
+            {
+
+                var studentList = await dbOperations.GetAllData<Student>("Student");
+                if (!studentList.Any(x => x.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ViewData["Invalid"] = "Studnet not exit";
+                    return View();
+                }
+                //var course_Section_Faculty = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+                //var attendanceFor = course_Section_Faculty.FirstOrDefault(x => x.Id == data.CId);
+                var student_Course_Registration = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+                var studentCourseRegistered = student_Course_Registration.FirstOrDefault(x => x.Student.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Id.Equals(data.CId, StringComparison.OrdinalIgnoreCase));
+                if (studentCourseRegistered != null)
+                {
+                    var result = await dbOperations.SaveData<Students_Attendance>(new Students_Attendance
+                    {
+                        IsAttended = true,
+                        Student_Course_Registration = studentCourseRegistered
+                    }, "Students_Attendance");
+                    if (result != null)
+                    {
+                        ViewData["Valid"] = "Submitted";
+                        return View();
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+            ViewData["InValid"] = "Some thing went wrong ..!";
+            return View();
+        }
         public async Task<Students_Attendance> UpdateAttendance()
         {
             return new Students_Attendance();
@@ -377,10 +420,9 @@ namespace AMS.Controllers
 
         #region QRCode
         [HttpGet]
-        public IActionResult CreateQRCode()
+        public IActionResult CreateQRCode(string data)
         {
-            var queryParameter = Guid.NewGuid().ToString("N");
-            var url = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + "/AMS/MarkAttendance?uid=" + queryParameter;
+            var url = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + "/AMS/MarkAttendance?uid=" + data;
             string WebUri = new Uri(url).ToString();
             string UriPayload = WebUri.ToString();
             QRCodeGenerator QrGenerator = new();

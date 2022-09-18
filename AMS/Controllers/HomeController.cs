@@ -187,7 +187,7 @@ namespace AMS.Controllers
                 if (token != null)
                 {
                     var studentList = await dbOperations.GetAllData<Student>("Student");
-                    if (!studentList.Any(x => x.Email.Equals(userModel.Email, StringComparison.OrdinalIgnoreCase)))
+                    if (!studentList.Any(x => x.Email?.ToLower() == userModel.Email.ToLower()))
                     {
                         ViewData["Invalid"] = "Fail to login";
                         return View("SignIn");
