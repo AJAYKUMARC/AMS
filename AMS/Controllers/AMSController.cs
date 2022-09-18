@@ -252,17 +252,18 @@ namespace AMS.Controllers
             IList<StudentRegistrationViewModel> studentRegistrationViewModel = new List<StudentRegistrationViewModel>();
             foreach (var sCourse in scheduledCourses)
             {
-                if (courseRegistered.Any(x => x.Course.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase)))
+                var data = courseRegistered.FirstOrDefault(x => x.Course.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase) && x.Course.Faculty.Id.Equals(sCourse.Faculty.Id, StringComparison.OrdinalIgnoreCase) && x.Course.Section.Id.Equals(sCourse.Section.Id, StringComparison.OrdinalIgnoreCase));
+                if (data != null)
                 {
-                    var courseRegisteredId = courseRegistered.FirstOrDefault(x => x.Course.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase))?.Id;
-                    if(courseRegisteredId == null)
+                    var courseRegisteredId = data.Id;
+                    if (courseRegisteredId == null)
                     {
                         return View(studentRegistrationViewModel);
                     }
                     StudentRegistrationViewModel studentRegistration = new()
                     {
                         Course_Section_Faculty = sCourse,
-                        CourseRegisteredId= courseRegisteredId,
+                        CourseRegisteredId = courseRegisteredId,
                         IsRegistered = true
                     };
                     studentRegistrationViewModel.Add(studentRegistration);
