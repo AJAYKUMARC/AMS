@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using QRCoder;
 using System.Drawing;
 using Microsoft.AspNetCore.Authorization;
+using AMS.ViewModels;
+using AMS.ViewModels.Faculty;
 
 namespace AMS.Controllers
 {
@@ -169,12 +171,21 @@ namespace AMS.Controllers
         #endregion Student
 
         #region FacultyRegistration
-        public IActionResult FacultyRegistration()
+        public async Task<IActionResult> FacultyRegistration()
         {
-            return View();
+            var courseList = await dbOperations.GetAllData<Course>("Course");
+            var sectionList = await dbOperations.GetAllData<Section>("Section");
+            var registrationList = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+            FacultyRegistrationViewModel data = new()
+            {
+                Courses = courseList,
+                Sections = sectionList,
+                RegistrationList = registrationList
+            };
+            return View(data);
         }
 
-        public async Task<IActionResult> GetFacultyRegistration()
+        public async Task<IActionResult> ViewRegCourseDetails(string data)
         {
             try
             {
@@ -187,16 +198,40 @@ namespace AMS.Controllers
             }
         }
 
-        public async Task<IActionResult> RegisterFacultyWithCourse(Course_Section_Faculty data)
+        public async Task<IActionResult> RegisterFacultyWithCourse(CourseViewModel courseViewModel)
         {
             try
             {
+                if (courseViewModel == null || courseViewModel.SName == null || courseViewModel.CName == null)
+                {
+                    //With Fail Message
+                    return View("FacultyRegistration");
+                }
+                Course_Section_Faculty data = new() { };
+                var courseList = await dbOperations.GetAllData<Course>("Course");
+                var sectionList = await dbOperations.GetAllData<Section>("Section");
+                if (courseList != null && courseList.Count > 0 && sectionList != null && sectionList.Count > 0)
+                {
+                    var selectedCourse = courseList.FirstOrDefault(x => x.Name == courseViewModel.CName);
+                    var selectedSection = sectionList.FirstOrDefault(x => x.Name == courseViewModel.SName);
+                    if (selectedCourse != null && selectedSection != null)
+                    {
+                        data.Course = selectedCourse;
+                        data.Section = selectedSection;
+                    }
+                }
+                if (data.Course == null || data.Section == null)
+                {
+                    //With Fail Message
+                    return View("FacultyRegistration");
+                }
                 var result = await dbOperations.SaveData(data, "Course_Section_Faculty");
                 if (result == null)
                 {
-
+                    //With Success Message
+                    return RedirectToAction("FacultyRegistration");
                 }
-                return RedirectToAction("GetFacultyRegistration");
+                return RedirectToAction("FacultyRegistration");
             }
             catch (Exception)
             {

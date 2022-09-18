@@ -1,34 +1,26 @@
-﻿@{
+﻿@using AMS.ViewModels.Faculty
+@{
     ViewBag.Title = "Course Page";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@model FacultyRegistrationViewModel;
 <div class="container-fluid pt-4 px-4">
     <div class="row g-4">
         <div class="bg-light col-sm-12 col-xl-12">
             <div class="bg-light rounded h-100 p-4">
                 <h6 class="mb-4">Add Course </h6>
-                <form>
+                <form asp-action="RegisterFacultyWithCourse" asp-controller="AMS" method="post">
                     <div class="row mb-3" style="float:left;width:33%">
                         <div class="form-floating mb-3">
-                            <select class="form-select" id="floatingSelect"
-                                    aria-label="Floating label select example">
-                                <option selected>Open this select menu</option>
-                                <option value="1">IOT</option>
-                                <option value="2">SE</option>
-                                <option value="3">SQL</option>
-                            </select>
+                            <select name="CName" asp-items="@(new SelectList(Model.Courses,"Name","Name"))" class="form-select" id="floatingSelect"
+                                    aria-label="Floating label select example"></select>
                             <label for="floatingSelect">Course</label>
                         </div>
                     </div>
                     <div class="row mb-3" style="float:left;width:33%;margin-left:2%">
                         <div class="form-floating mb-3">
-                            <select class="form-select" id="floatingSelect"
-                                    aria-label="Floating label select example">
-                                <option selected>Open this select menu</option>
-                                <option value="1">S1</option>
-                                <option value="2">S2</option>
-                                <option value="3">S3</option>
-                            </select>
+                            <select name="SName" asp-items="@(new SelectList(Model.Sections,"Name","Name"))" class="form-select" id="floatingSelect"
+                                    aria-label="Floating label select example"></select>
                             <label for="floatingSelect">Section</label>
                         </div>
                     </div>
@@ -56,24 +48,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>John</td>
-                            <td>Doe</td>
-                            <td><a href="#" class="link-primary">View Details</a></td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>Mark</td>
-                            <td>Otto</td>
-                           <td><a href="#" class="link-primary">View Details</a></td>
-                        </tr>
-                        <tr>
-                            <th scope="row">3</th>
-                            <td>Jacob</td>
-                            <td>Thornton</td>
-                            <td><a href="#" class="link-primary">View Details</a></td>
-                        </tr>
+                        @if(@Model.RegistrationList.Count<=0)
+                        {
+                            <tr><td colspan=3><h6>No Registrations</h6></td></tr>
+                        }
+                        @foreach (var listItem in Model.RegistrationList)
+                        {
+                            <tr>
+                                <th scope="row">1</th>
+                                <td>@listItem.Course.Name</td>
+                                <td>@listItem.Section.Name</td>
+                                <td><a asp-action="ViewRegCourseDetails" asp-controller="AMS" asp-route-data="@listItem.Id" class="link-primary">View Details</a></td>
+                            </tr>
+                        }
+                       
                     </tbody>
                 </table>
             </div>
