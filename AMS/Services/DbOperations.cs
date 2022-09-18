@@ -104,7 +104,7 @@ namespace AMS.Services
                             $"{id}.json";
 
                 HttpClient client = new();
-                var httpResponseMessage = await client.PutAsync(url, payload);
+                var httpResponseMessage = await client.PatchAsync(url, payload);
 
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {

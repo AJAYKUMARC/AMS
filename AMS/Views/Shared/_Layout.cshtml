@@ -56,14 +56,11 @@
                     <a asp-action="Index" asp-controller="Home" class="nav-item nav-link active"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
                     @if (User.IsInRole("Faculty"))
                     {
-                        <a asp-action="FacultyRegistration" asp-controller="AMS" class="nav-item nav-link"><i class="fa fa-keyboard me-2"></i>Register a Course</a>
-                        <a asp-action="GetFacultyRegistration" asp-controller="AMS" class="nav-item nav-link"><i class="fa fa-table me-2"></i>Course Registered</a>
-                        <a asp-action="CreateQRCode" asp-controller="AMS" class="nav-item nav-link"><i class="fa fa-th me-2"></i>Show QR Code</a>
+                        <a asp-action="FacultyRegistration" asp-controller="AMS" class="nav-item nav-link"><i class="fa fa-keyboard me-2"></i>Course</a>
                     }
                     @if (User.IsInRole("Student"))
                     {
                         <a asp-action="StudentRegistration" asp-controller="AMS" class="nav-item nav-link"><i class="fa fa-keyboard me-2"></i>Register Course</a>
-                        <a asp-action="GetStudentCourseRegistration" asp-controller="AMS" class="nav-item nav-link"><i class="fa fa-table me-2"></i>Course Registered</a>
                     }
                 </div>
             </nav>

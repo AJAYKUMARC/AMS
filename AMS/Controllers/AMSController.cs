@@ -367,25 +367,31 @@ namespace AMS.Controllers
             return new Students_Attendance();
         }
 
-        public async Task<IActionResult> MarkAttendance(string uid)
+        [AllowAnonymous]
+        public IActionResult MarkAttendance(string uid)
         {
             ViewBag.CId = uid;
             return View();
         }
-
+        [AllowAnonymous]
         public async Task<IActionResult> SubmitAttendance(SubmitAttendanceViewModel data)
         {
             try
             {
-
+                var pinList = await dbOperations.GetAllData<UPIN>("UPIN");
+                
                 var studentList = await dbOperations.GetAllData<Student>("Student");
                 if (!studentList.Any(x => x.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase)))
                 {
                     ViewData["Invalid"] = "Studnet not exit";
                     return View();
                 }
-                //var course_Section_Faculty = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
-                //var attendanceFor = course_Section_Faculty.FirstOrDefault(x => x.Id == data.CId);
+                var userPINDetails = pinList.FirstOrDefault(x => x.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase));
+                if (userPINDetails.PIN != data.PIN)
+                {
+                    ViewData["Invalid"] = "Invalid PIN";
+                    return View();
+                }
                 var student_Course_Registration = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
                 var studentCourseRegistered = student_Course_Registration.FirstOrDefault(x => x.Student.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Id.Equals(data.CId, StringComparison.OrdinalIgnoreCase));
                 if (studentCourseRegistered != null)
@@ -401,8 +407,6 @@ namespace AMS.Controllers
                         return View();
                     }
                 }
-
-
             }
             catch (Exception ex)
             {
@@ -412,9 +416,18 @@ namespace AMS.Controllers
             ViewData["InValid"] = "Some thing went wrong ..!";
             return View();
         }
-        public async Task<Students_Attendance> UpdateAttendance()
+
+        public async Task<IActionResult> UpdateAttendance(string cId, string email, string data, bool isApproved)
         {
-            return new Students_Attendance();
+            var studentAttendanceList = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+            var currentAttendance = studentAttendanceList.FirstOrDefault(x => x.Student_Course_Registration.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase) && x.Id == data);
+            if (currentAttendance != null)
+            {
+                currentAttendance.IsApproved = isApproved;
+                var updatedData = await dbOperations.UpdateData<Students_Attendance>(data, currentAttendance, "Students_Attendance");
+                return RedirectToAction("ViewRegCourseDetails", "AMS", data = cId);
+            }
+            return RedirectToAction("ViewRegCourseDetails", new { data = cId });
         }
         #endregion Attendance
 

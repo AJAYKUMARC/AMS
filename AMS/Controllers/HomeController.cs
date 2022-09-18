@@ -36,6 +36,19 @@ namespace AMS.Controllers
                     var userPIN = pinDetails.FirstOrDefault(x => x.Email.Equals(email, StringComparison.OrdinalIgnoreCase))?.PIN ?? 0000;
                     HttpContext.Session.SetInt32("UserPIN", userPIN);
                 }
+                if (User.IsInRole("Student"))
+                {
+                    var courseReg = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+                    ViewData["CourseReg"] = courseReg.Count(x => x.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+                    var courseAttended = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+                    ViewData["CourseAtt"] = courseAttended.Count(x => x.Student_Course_Registration.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+
+                }
+                if (User.IsInRole("Faculty"))
+                {
+                    var courseReg = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+                    ViewData["CourseReg"] = courseReg.Count(x => x.Faculty.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+                }
                 return View();
             }
             else
@@ -88,7 +101,13 @@ namespace AMS.Controllers
                     Email = userModel.Email,
                     Name = userModel.UserName
                 };
+                var uPIN = new UPIN
+                {
+                    Email = userModel.Email,
+                    PIN = new Random().Next(0, 10000),
+                };
 
+                var upinResult = await dbOperations.SaveData<UPIN>(uPIN, "UPIN");
                 //Save the student in the student table.
                 var result = await dbOperations.SaveData(student, "Student");
                 ViewData["Valid"] = "Registered Successfully.";
