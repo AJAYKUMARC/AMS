@@ -74,11 +74,11 @@
 
                                 @if (@listItem.IsApproved)
                                 {
-                                    <td><a asp-action="ViewRegCourseDetails" asp-controller="AMS" asp-route-email="@listItem.Student_Course_Registration.Student.Email" asp-route-data="@listItem.Id" asp-route-isApproved=false asp-route-cId="@listItem.Student_Course_Registration.Course_Section_Faculty.Id" class="link-primary">Reject</a></td>
+                                    <td><a asp-action="UpdateAttendance" asp-controller="AMS" asp-route-email="@listItem.Student_Course_Registration.Student.Email" asp-route-data="@listItem.Id" asp-route-isApproved=false asp-route-cId="@listItem.Student_Course_Registration.Course_Section_Faculty.Id" class="link-primary">Reject</a></td>
                                 }
                                 else
                                 {
-                                    <td><a asp-action="UpdateAttendance" asp-controller="AMS" asp-route-email="@listItem.Student_Course_Registration.Student.Email" asp-route-data="@listItem.Id" asp-route-isApproved=false asp-route-cId="@listItem.Student_Course_Registration.Course_Section_Faculty.Id" class="link-primary">Approve</a></td>
+                                    <td><a asp-action="UpdateAttendance" asp-controller="AMS" asp-route-email="@listItem.Student_Course_Registration.Student.Email" asp-route-data="@listItem.Id" asp-route-isApproved=true asp-route-cId="@listItem.Student_Course_Registration.Course_Section_Faculty.Id" class="link-primary">Approve</a></td>
                                 }
 
                             </tr>

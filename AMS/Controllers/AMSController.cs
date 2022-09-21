@@ -379,7 +379,7 @@ namespace AMS.Controllers
             try
             {
                 var pinList = await dbOperations.GetAllData<UPIN>("UPIN");
-                
+
                 var studentList = await dbOperations.GetAllData<Student>("Student");
                 if (!studentList.Any(x => x.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase)))
                 {
@@ -425,9 +425,9 @@ namespace AMS.Controllers
             {
                 currentAttendance.IsApproved = isApproved;
                 var updatedData = await dbOperations.UpdateData<Students_Attendance>(data, currentAttendance, "Students_Attendance");
-                return RedirectToAction("ViewRegCourseDetails", "AMS", data = cId);
+                return RedirectToAction("ViewRegCourseDetails", "AMS", new { data = cId });
             }
-            return RedirectToAction("ViewRegCourseDetails", new { data = cId });
+            return RedirectToAction("ViewRegCourseDetails", "AMS", new { data = cId });
         }
         #endregion Attendance
 
