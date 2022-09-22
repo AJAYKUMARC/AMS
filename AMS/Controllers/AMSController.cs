@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using AMS.ViewModels;
 using AMS.ViewModels.Faculty;
 using AMS.ViewModels.Student;
+using static QRCoder.PayloadGenerator;
 
 namespace AMS.Controllers
 {
@@ -451,7 +452,16 @@ namespace AMS.Controllers
 
         public IActionResult MyProfile()
         {
-            return View();
+
+            ProfileViewModel profile = new ProfileViewModel
+            {
+                Email = HttpContext.Session.GetString("UserEmail"),
+                Name = HttpContext.Session.GetString("UserName"),
+                UserType = HttpContext.Session.GetString("_UserType"),
+                Address = "N/A",
+                PhoneNumber = "N/A"
+            };
+            return View(profile);
         }
 
         #region PIN
@@ -465,12 +475,31 @@ namespace AMS.Controllers
             var result = await dbOperations.SaveData<UPIN>(pinDetails, "UPIN");
             return View();
         }
+
         public async Task<int> GetPIN()
         {
             var email = HttpContext.Session.GetString("UserEmail");
             var pinDetails = await dbOperations.GetAllData<UPIN>("UPIN");
             var pin = pinDetails.FirstOrDefault(x => x.Email.Equals(email))?.PIN;
             return pin ?? 0000;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPIN(int PIN)
+        {
+            var email = HttpContext.Session.GetString("UserEmail");
+            var pinDetailsList = await dbOperations.GetAllData<UPIN>("UPIN");
+            var currentPinDetails = pinDetailsList.FirstOrDefault(x => x.Email.Equals(email,StringComparison.OrdinalIgnoreCase));
+            currentPinDetails.PIN = PIN;
+            var result = await dbOperations.UpdateData<UPIN>(currentPinDetails.Id, currentPinDetails, "UPIN");
+            if (result.PIN == PIN)
+            {
+                HttpContext.Session.SetString("IsPINSet","TRUE");
+                return RedirectToAction("MyProfile", "AMS"); 
+            }
+
+            HttpContext.Session.SetString("IsPINSet", "FALSE");
+            return RedirectToAction("MyProfile", "AMS");
         }
         #endregion PIN
 
