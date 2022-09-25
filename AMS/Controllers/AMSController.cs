@@ -8,6 +8,7 @@ using AMS.ViewModels;
 using AMS.ViewModels.Faculty;
 using AMS.ViewModels.Student;
 using static QRCoder.PayloadGenerator;
+using NuGet.Common;
 
 namespace AMS.Controllers
 {
@@ -262,8 +263,10 @@ namespace AMS.Controllers
         #region StudentCourseRegistration
         public async Task<IActionResult> StudentRegistration()
         {
+            var email = HttpContext.Session.GetString("UserEmail");
             var scheduledCourses = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
             var courseRegistered = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+            courseRegistered = courseRegistered.Where(x => x.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
             IList<StudentRegistrationViewModel> studentRegistrationViewModel = new List<StudentRegistrationViewModel>();
             foreach (var sCourse in scheduledCourses)
             {
@@ -363,9 +366,12 @@ namespace AMS.Controllers
 
         #region Attendance
 
-        public async Task<Students_Attendance> ShowAttendance()
+        public async Task<IActionResult> ViewMyAttendance()
         {
-            return new Students_Attendance();
+            var email = HttpContext.Session.GetString("UserEmail");
+            var attendanceList = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+            attendanceList = attendanceList.Where(x => x.Student_Course_Registration.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
+            return View(attendanceList);
         }
 
         [AllowAnonymous]
@@ -489,15 +495,31 @@ namespace AMS.Controllers
         {
             var email = HttpContext.Session.GetString("UserEmail");
             var pinDetailsList = await dbOperations.GetAllData<UPIN>("UPIN");
-            var currentPinDetails = pinDetailsList.FirstOrDefault(x => x.Email.Equals(email,StringComparison.OrdinalIgnoreCase));
-            currentPinDetails.PIN = PIN;
-            var result = await dbOperations.UpdateData<UPIN>(currentPinDetails.Id, currentPinDetails, "UPIN");
-            if (result.PIN == PIN)
+            var currentPinDetails = pinDetailsList.FirstOrDefault(x => x.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            if (currentPinDetails != null)
             {
-                HttpContext.Session.SetString("IsPINSet","TRUE");
-                return RedirectToAction("MyProfile", "AMS"); 
+                currentPinDetails.PIN = PIN;
+                var result = await dbOperations.UpdateData<UPIN>(currentPinDetails.Id, currentPinDetails, "UPIN");
+                if (result.PIN == PIN)
+                {
+                    HttpContext.Session.SetString("IsPINSet", "TRUE");
+                    return RedirectToAction("MyProfile", "AMS");
+                }
             }
-
+            else
+            {
+                currentPinDetails = new UPIN
+                {
+                    Email = email,
+                    PIN = PIN,
+                };
+                var result = await dbOperations.SaveData<UPIN>(currentPinDetails, "UPIN");
+                if (result.PIN == PIN)
+                {
+                    HttpContext.Session.SetString("IsPINSet", "TRUE");
+                    return RedirectToAction("MyProfile", "AMS");
+                }
+            }
             HttpContext.Session.SetString("IsPINSet", "FALSE");
             return RedirectToAction("MyProfile", "AMS");
         }

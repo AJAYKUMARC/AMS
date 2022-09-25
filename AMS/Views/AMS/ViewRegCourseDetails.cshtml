@@ -36,7 +36,6 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
                             <th scope="col">Name</th>
                             <th scope="col">Email</th>
                             <th scope="col">Is Attend</th>
@@ -52,7 +51,6 @@
                         @foreach (var listItem in Model.AttendanceList)
                         {
                             <tr>
-                                <th scope="row">1</th>
                                 <td>@listItem.Student_Course_Registration.Student.Name</td>
                                 <td>@listItem.Student_Course_Registration.Student.Email</td>
                                 @if (@listItem.IsAttended)

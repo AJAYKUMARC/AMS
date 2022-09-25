@@ -41,7 +41,7 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
+                        
                             <th scope="col">Course</th>
                             <th scope="col">Section</th>
                             <th scope="col">Action</th>
@@ -55,7 +55,7 @@
                         @foreach (var listItem in Model.RegistrationList)
                         {
                             <tr>
-                                <th scope="row">1</th>
+                             
                                 <td>@listItem.Course.Name</td>
                                 <td>@listItem.Section.Name</td>
                                 <td><a asp-action="ViewRegCourseDetails" asp-controller="AMS" asp-route-data="@listItem.Id" class="link-primary">View Details</a></td>
