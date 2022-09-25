@@ -456,6 +456,9 @@ namespace AMS.Controllers
         }
         #endregion QRCode
 
+
+
+        #region MyProfile
         public IActionResult MyProfile()
         {
 
@@ -470,7 +473,6 @@ namespace AMS.Controllers
             return View(profile);
         }
 
-        #region PIN
         public async Task<IActionResult> CreatedPIN(int pin)
         {
             UPIN pinDetails = new()
@@ -523,7 +525,7 @@ namespace AMS.Controllers
             HttpContext.Session.SetString("IsPINSet", "FALSE");
             return RedirectToAction("MyProfile", "AMS");
         }
-        #endregion PIN
+        #endregion MyProfile
 
     }
 }

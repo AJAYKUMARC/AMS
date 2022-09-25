@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Newtonsoft.Json;
 using System.Security.Claims;
 using static QRCoder.PayloadGenerator;
@@ -272,6 +273,18 @@ namespace AMS.Controllers
             HttpContext.Session.SetString("IsPasswordSet", "FALSE");
             return RedirectToAction("MyProfile", "AMS");
 
+        }
+
+        public IActionResult ForgotPassword()
+        {
+            return View("ForgotPassword");
+        }
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            await AuthProvider.SendPasswordResetEmailAsync(email);
+            HttpContext.Session.SetString("IsPasswordSet", "TRUE");
+            return RedirectToAction("ForgotPassword");
         }
     }
 }
