@@ -282,9 +282,18 @@ namespace AMS.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(string email)
         {
-            await AuthProvider.SendPasswordResetEmailAsync(email);
-            HttpContext.Session.SetString("IsPasswordSet", "TRUE");
-            return RedirectToAction("ForgotPassword");
+            try
+            {
+                await AuthProvider.SendPasswordResetEmailAsync(email);
+                HttpContext.Session.SetString("IsPasswordSet", "TRUE");
+                return RedirectToAction("ForgotPassword");
+            }
+            catch (Exception ex)
+            {
+                HttpContext.Session.SetString("IsPasswordSet", "FALSE");
+                return RedirectToAction("ForgotPassword");
+            }
+           
         }
     }
 }
