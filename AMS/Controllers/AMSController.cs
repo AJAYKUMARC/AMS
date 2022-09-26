@@ -24,36 +24,24 @@ namespace AMS.Controllers
         }
 
         #region Section
-        public IActionResult Section()
+        public async Task<IActionResult> Section()
         {
-            return View();
+            var section = await dbOperations.GetAllData<Section>("Section");
+            return View(section);
         }
 
-        public async Task<Section> SaveSection(Section section)
+        public async Task<IActionResult> SaveSection(Section section)
         {
             try
             {
                 var result = await dbOperations.SaveData(section, "Section");
                 if (result == null)
                 {
-
+                    return RedirectToAction("Section", "AMS");
                 }
-                return result;
+                return RedirectToAction("Section", "AMS");
             }
             catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        public async Task<IList<Section>> GetSection()
-        {
-            try
-            {
-                var result = await dbOperations.GetAllData<Section>("Section");
-                return result;
-            }
-            catch (Exception ex)
             {
                 throw;
             }
@@ -61,117 +49,29 @@ namespace AMS.Controllers
         #endregion Section
 
         #region Course
-        public IActionResult Course()
+        public async Task<IActionResult> Course()
         {
-            return View();
+            var course = await dbOperations.GetAllData<Course>("Course");
+            return View(course);
         }
 
-        public async Task<Course?> SaveCourse(Course course)
+        public async Task<IActionResult> SaveCourse(Course course)
         {
             try
             {
                 var result = await dbOperations.SaveData(course, "Course");
                 if (result == null)
                 {
-
+                    return RedirectToAction("Course", "AMS");
                 }
-                return result;
+                return RedirectToAction("Course", "AMS");
             }
             catch (Exception)
             {
                 throw;
             }
-        }
-
-        public async Task<IList<Course>> GetCourse()
-        {
-            try
-            {
-                var result = await dbOperations.GetAllData<Course>("Course");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-
         }
         #endregion Course
-
-        #region Faculty
-        public IActionResult Faculty()
-        {
-            return View();
-        }
-
-        public async Task<Faculty> SaveFaculty(Faculty faculty)
-        {
-            try
-            {
-
-                var result = await dbOperations.SaveData(faculty, "Faculty");
-                if (result == null)
-                {
-
-                }
-                return result;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        public async Task<IList<Faculty>> GetFaculty()
-        {
-            try
-            {
-                var result = await dbOperations.GetAllData<Faculty>("Faculty");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-        #endregion Faculty
-
-        #region Student
-        public IActionResult Student()
-        {
-            return View();
-        }
-
-        public async Task<IActionResult> SaveStudent(Student student)
-        {
-            try
-            {
-                var result = await dbOperations.SaveData(student, "Student");
-                if (result == null)
-                {
-
-                }
-                return View("Student");
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        public async Task<IActionResult> GetStudent()
-        {
-            try
-            {
-                var result = await dbOperations.GetAllData<Student>("Student");
-                return View();
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-        #endregion Student
 
         #region FacultyRegistration
         public async Task<IActionResult> FacultyRegistration()
@@ -455,8 +355,6 @@ namespace AMS.Controllers
             return View();
         }
         #endregion QRCode
-
-
 
         #region MyProfile
         public IActionResult MyProfile()

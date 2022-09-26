@@ -60,7 +60,7 @@ namespace AMS.Controllers
         }
 
         /// <summary>
-        /// Shows Registration page for the Student
+        /// Shows Registration page 
         /// </summary>
         /// <returns></returns>
         public IActionResult Register()
@@ -69,7 +69,7 @@ namespace AMS.Controllers
         }
 
         /// <summary>
-        /// Process the Registration of a Student
+        /// Process the Registration 
         /// </summary>
         /// <param name="userModel"></param>
         /// <returns></returns>
@@ -154,7 +154,7 @@ namespace AMS.Controllers
         }
 
         /// <summary>
-        /// Shows Login page for a student
+        /// Shows Login page 
         /// </summary>
         /// <returns></returns>
         public IActionResult SignIn()
@@ -163,7 +163,7 @@ namespace AMS.Controllers
         }
 
         /// <summary>
-        /// Process the Login of a studnet
+        /// Process the Login
         /// </summary>
         /// <param name="userModel"></param>
         /// <returns></returns>
@@ -245,8 +245,6 @@ namespace AMS.Controllers
 
         }
 
-
-
         /// <summary>
         /// Process the logout of a user (student/faculty)
         /// </summary>
@@ -261,6 +259,10 @@ namespace AMS.Controllers
             return RedirectToAction("SignIn");
         }
 
+        /// <summary>
+        /// Reset Password
+        /// </summary>
+        /// <returns></returns>
         public async Task<IActionResult> ResetPassword()
         {
             var email = HttpContext.Session.GetString("UserEmail");
@@ -275,10 +277,20 @@ namespace AMS.Controllers
 
         }
 
+        /// <summary>
+        /// FogotPasword
+        /// </summary>
+        /// <returns></returns>
         public IActionResult ForgotPassword()
         {
             return View("ForgotPassword");
         }
+
+        /// <summary>
+        /// ForgotmPassword
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(string email)
         {
@@ -293,7 +305,7 @@ namespace AMS.Controllers
                 HttpContext.Session.SetString("IsPasswordSet", "FALSE");
                 return RedirectToAction("ForgotPassword");
             }
-           
+
         }
     }
 }
