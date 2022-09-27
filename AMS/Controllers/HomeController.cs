@@ -269,10 +269,10 @@ namespace AMS.Controllers
             if (email != null)
             {
                 await AuthProvider.SendPasswordResetEmailAsync(email);
-                HttpContext.Session.SetString("IsPasswordSet", "TRUE");
+                TempData["IsPasswordSet"] = true;
                 return RedirectToAction("MyProfile", "AMS");
             }
-            HttpContext.Session.SetString("IsPasswordSet", "FALSE");
+            TempData["IsPasswordSet"] = false;
             return RedirectToAction("MyProfile", "AMS");
 
         }
@@ -297,12 +297,12 @@ namespace AMS.Controllers
             try
             {
                 await AuthProvider.SendPasswordResetEmailAsync(email);
-                HttpContext.Session.SetString("IsPasswordSet", "TRUE");
+                TempData["IsPasswordSet"] = true;
                 return RedirectToAction("ForgotPassword");
             }
             catch (Exception ex)
             {
-                HttpContext.Session.SetString("IsPasswordSet", "FALSE");
+                TempData["IsPasswordSet"] = false;
                 return RedirectToAction("ForgotPassword");
             }
 

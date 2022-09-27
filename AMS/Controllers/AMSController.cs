@@ -402,7 +402,7 @@ namespace AMS.Controllers
                 var result = await dbOperations.UpdateData<UPIN>(currentPinDetails.Id, currentPinDetails, "UPIN");
                 if (result.PIN == PIN)
                 {
-                    HttpContext.Session.SetString("IsPINSet", "TRUE");
+                    TempData["IsPINSet"] = true;
                     return RedirectToAction("MyProfile", "AMS");
                 }
             }
@@ -416,11 +416,11 @@ namespace AMS.Controllers
                 var result = await dbOperations.SaveData<UPIN>(currentPinDetails, "UPIN");
                 if (result.PIN == PIN)
                 {
-                    HttpContext.Session.SetString("IsPINSet", "TRUE");
+                    TempData["IsPINSet"] = true;
                     return RedirectToAction("MyProfile", "AMS");
                 }
             }
-            HttpContext.Session.SetString("IsPINSet", "FALSE");
+            TempData["IsPINSet"] = false;
             return RedirectToAction("MyProfile", "AMS");
         }
         #endregion MyProfile
