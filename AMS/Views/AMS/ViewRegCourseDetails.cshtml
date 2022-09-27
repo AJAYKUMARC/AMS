@@ -65,9 +65,13 @@
                                 {
                                     <td><h6>Approved</h6></td>
                                 }
-                                else
+                                else if (!@listItem.IsApproved && listItem.ApprovedOn.Ticks > 0)
                                 {
                                     <td>Rejected</td>
+                                }
+                                else
+                                {
+                                    <td>Pending</td>
                                 }
 
                                 @if (@listItem.IsApproved)
@@ -78,7 +82,6 @@
                                 {
                                     <td><a asp-action="UpdateAttendance" asp-controller="AMS" asp-route-email="@listItem.Student_Course_Registration.Student.Email" asp-route-data="@listItem.Id" asp-route-isApproved=true asp-route-cId="@listItem.Student_Course_Registration.Course_Section_Faculty.Id" class="link-primary">Approve</a></td>
                                 }
-
                             </tr>
                         }
 

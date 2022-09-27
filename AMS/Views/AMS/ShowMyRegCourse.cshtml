@@ -1,0 +1,54 @@
+﻿@using AMS.ViewModels
+@model List<ShowMyRegCourse>
+@{
+    ViewBag.Title = "My Regd. Course's ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div style="width: 100%; overflow: hidden;">
+    @foreach (var item in Model)
+    {
+        <div id="@item.UId" style="float:left"></div>
+    }
+</div>
+
+
+<script type="text/javascript">
+
+    window.onload = function () {
+        $.ajax({
+            url: '@Url.Action("AjaxShowMyRegCourse","AMS")',
+            cache: false,
+            success: function (result) {
+                $.each(result, function (index, value) {
+                    loadChart(value.uId, value.data, value.graphName)
+                }
+                )
+                console.log(result);
+            }
+        });
+    };
+
+    function loadChart(chartId, data, name) {
+        CanvasJS.addColorSet("greenShades",
+            [
+                "#2E8B57"
+            ]);
+        var chart = new CanvasJS.Chart(chartId, {
+            title: {
+                text: name,
+                fontSize: 15
+            },
+            animationEnabled: true,
+            colorSet: "greenShades",
+            legend: {
+                fontSize: 15,
+                fontFamily: "Helvetica"
+            },
+            theme: "light2",
+            width: 320,
+            height: 260,
+            data: data
+        });
+        chart.render();
+    }
+</script>

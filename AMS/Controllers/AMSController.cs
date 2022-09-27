@@ -160,7 +160,8 @@ namespace AMS.Controllers
 
         #endregion FacultyRegistration
 
-        #region StudentCourseRegistration
+        #region StudentCourseRegistration        
+
         public async Task<IActionResult> StudentRegistration()
         {
             var email = HttpContext.Session.GetString("UserEmail");
@@ -264,7 +265,67 @@ namespace AMS.Controllers
         }
         #endregion StudentCourseRegistration
 
-        #region Attendance
+        #region Attendance       
+        public async Task<IActionResult> ShowMyRegCourse()
+        {   
+            var result = await GetMyRegCourse();
+            return View(result);
+        }
+
+        public async Task<IActionResult> AjaxShowMyRegCourse()
+        {
+            var result = await GetMyRegCourse();
+            return Json(result);
+        }
+
+        private async Task<List<ShowMyRegCourse>> GetMyRegCourse()
+        {
+            List<ShowMyRegCourse> showMyRegCourse = new List<ShowMyRegCourse>();
+            var email = HttpContext.Session.GetString("UserEmail");
+            var studentCourseReg = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+            studentCourseReg = studentCourseReg.Where(x => x.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (studentCourseReg != null && studentCourseReg.Count > 0)
+            {
+                var studentsAttendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+
+                foreach (var course in studentCourseReg)
+                {
+                    var totalCount = course.Course_Section_Faculty.TotalCount;
+                    var attendedCount = studentsAttendance.Where(x => x.Student_Course_Registration.Id.Equals(course.Id, StringComparison.OrdinalIgnoreCase) && x.Student_Course_Registration.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).Count();
+                    int percentage = 0;
+                    if (totalCount > attendedCount)
+                    {
+                        percentage = (attendedCount / totalCount) * 100;
+                    }
+                    ShowMyRegCourse showMyReg = new()
+                    {
+                        GraphName = course.Course_Section_Faculty.Course.Name,
+                        UId = course.Id,
+                        Data = new Root
+                        {
+                            type = "doughnut",
+                            indexLabelFontFamily = "Heebo",
+                            indexLabelFontSize = 15,
+                            indexLabel = "{label} {y}%",
+                            startAngle = -20,
+                            showInLegend = true,
+                            toolTipContent = "{legendText} {y}%",
+                            dataPoints = new List<DataPoint>
+                            {
+                                new DataPoint
+                                {
+                                    label="Total Classes",
+                                    legendText="Classes Attended",
+                                    y=percentage
+                                }
+                            }
+                        }
+                    };
+                    showMyRegCourse.Add(showMyReg);
+                }
+            }
+            return showMyRegCourse;
+        }
 
         public async Task<IActionResult> ViewMyAttendance()
         {
@@ -280,6 +341,7 @@ namespace AMS.Controllers
             ViewBag.CId = uid;
             return View();
         }
+
         [AllowAnonymous]
         public async Task<IActionResult> SubmitAttendance(SubmitAttendanceViewModel data)
         {
@@ -303,8 +365,15 @@ namespace AMS.Controllers
                 var studentCourseRegistered = student_Course_Registration.FirstOrDefault(x => x.Student.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Id.Equals(data.CId, StringComparison.OrdinalIgnoreCase));
                 if (studentCourseRegistered != null)
                 {
+                    var attendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+                    if (attendance.Where(x => x.AttendedOn.Date == DateTime.UtcNow.Date && x.Student_Course_Registration.Student.Email.Equals(data.Email, StringComparison.OrdinalIgnoreCase) && x.Student_Course_Registration.Course_Section_Faculty.Id.Equals(data.CId, StringComparison.OrdinalIgnoreCase)).Any())
+                    {
+                        ViewData["Invalid"] = "Already attendance marked for the class";
+                        return View();
+                    }
                     var result = await dbOperations.SaveData<Students_Attendance>(new Students_Attendance
                     {
+                        AttendedOn = DateTime.UtcNow,
                         IsAttended = true,
                         Student_Course_Registration = studentCourseRegistered
                     }, "Students_Attendance");
@@ -313,6 +382,11 @@ namespace AMS.Controllers
                         ViewData["Valid"] = "Submitted";
                         return View();
                     }
+                }
+                else
+                {
+                    ViewData["Invalid"] = "Not Registered for the Course";
+                    return View();
                 }
             }
             catch (Exception ex)
@@ -331,17 +405,20 @@ namespace AMS.Controllers
             if (currentAttendance != null)
             {
                 currentAttendance.IsApproved = isApproved;
+                currentAttendance.ApprovedOn = DateTime.UtcNow;
                 var updatedData = await dbOperations.UpdateData<Students_Attendance>(data, currentAttendance, "Students_Attendance");
                 return RedirectToAction("ViewRegCourseDetails", "AMS", new { data = cId });
             }
             return RedirectToAction("ViewRegCourseDetails", "AMS", new { data = cId });
         }
+
         #endregion Attendance
 
         #region QRCode
         [HttpGet]
-        public IActionResult CreateQRCode(string data)
+        public async Task<IActionResult> CreateQRCode(string data)
         {
+            await AddClassCount(data);
             var url = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + "/AMS/MarkAttendance?uid=" + data;
             string WebUri = new Uri(url).ToString();
             string UriPayload = WebUri.ToString();
@@ -422,6 +499,25 @@ namespace AMS.Controllers
             }
             TempData["IsPINSet"] = false;
             return RedirectToAction("MyProfile", "AMS");
+        }
+
+        private async Task<bool> AddClassCount(string uId)
+        {
+            var data = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+            if (data != null && data.Count > 0)
+            {
+                var currentRecord = data.FirstOrDefault(x => x.Id.Equals(uId, StringComparison.OrdinalIgnoreCase));
+                if (currentRecord != null)
+                {
+                    currentRecord.TotalCount += 1;
+                    var result = await dbOperations.UpdateData<Course_Section_Faculty>(currentRecord.Id, currentRecord, "Course_Section_Faculty");
+                    if (result != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
         #endregion MyProfile
 
