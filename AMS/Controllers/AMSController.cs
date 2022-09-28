@@ -9,6 +9,7 @@ using AMS.ViewModels.Faculty;
 using AMS.ViewModels.Student;
 using static QRCoder.PayloadGenerator;
 using NuGet.Common;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AMS.Controllers
 {
@@ -266,16 +267,56 @@ namespace AMS.Controllers
         #endregion StudentCourseRegistration
 
         #region Attendance       
+        [HttpGet]
         public async Task<IActionResult> ShowMyRegCourse()
-        {   
-            var result = await GetMyRegCourse();
-            return View(result);
+        {
+            var email = HttpContext.Session.GetString("UserEmail");
+            var studentCourseReg = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+            studentCourseReg = studentCourseReg.Where(x => x.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
+            var courseReg = new List<SelectListItem> { };
+            foreach (var item in studentCourseReg)
+            {
+                var courseName = item.Course_Section_Faculty.Course.Name + "-" + item.Course_Section_Faculty.Section.Name + "-" + item.Course_Section_Faculty.Faculty.Name;
+                SelectListItem selectList = new()
+                {
+                    Text = courseName,
+                    Value = item.Id,
+                    Selected = false
+                };
+                if (courseReg.Count < 0)
+                {
+                    selectList.Selected = true;
+                }
+                courseReg.Add(selectList);
+            }
+            ViewBag.Courses = courseReg;
+            return View();
         }
 
-        public async Task<IActionResult> AjaxShowMyRegCourse()
+        public async Task<JsonResult> GetGraphDetails(string Uid)
         {
-            var result = await GetMyRegCourse();
-            return Json(result);
+            var studentCourseRegit = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+            if (!string.IsNullOrEmpty(Uid) && studentCourseRegit != null && studentCourseRegit.Count > 0)
+            {
+                var studentsAttendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+                var currentStudentSub = studentCourseRegit.FirstOrDefault(x => x.Id.Equals(Uid, StringComparison.OrdinalIgnoreCase));
+                if (currentStudentSub != null)
+                {
+                    var totalCount = currentStudentSub.Course_Section_Faculty.TotalCount;
+                    var attendedCount = studentsAttendance.Where(x => x.Student_Course_Registration.Id.Equals(currentStudentSub.Id, StringComparison.OrdinalIgnoreCase) && x.Student_Course_Registration.Student.Email.Equals(currentStudentSub.Student.Email, StringComparison.OrdinalIgnoreCase)).Count();
+                    Dictionary<string, int> keyValuePairs = new Dictionary<string, int>();
+                    int percentage = 0;
+                    if (totalCount > attendedCount)
+                    {
+                        percentage = (attendedCount / totalCount) * 100;
+                    }
+                    keyValuePairs.Add("totalCount", totalCount);
+                    keyValuePairs.Add("attendedCount", attendedCount);
+                    keyValuePairs.Add("percentage", percentage);
+                    return Json(keyValuePairs);
+                }
+            }
+            return Json(string.Empty);
         }
 
         private async Task<List<ShowMyRegCourse>> GetMyRegCourse()
@@ -327,11 +368,17 @@ namespace AMS.Controllers
             return showMyRegCourse;
         }
 
-        public async Task<IActionResult> ViewMyAttendance()
+        public async Task<IActionResult> ViewMyAttendance(string uId)
         {
-            var email = HttpContext.Session.GetString("UserEmail");
+            if (uId == null || uId == "0")
+            {
+                var email = HttpContext.Session.GetString("UserEmail");
+                var attendanceListTemp = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+                attendanceListTemp = attendanceListTemp.Where(x => x.Student_Course_Registration.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
+                return View(attendanceListTemp);
+            }
             var attendanceList = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
-            attendanceList = attendanceList.Where(x => x.Student_Course_Registration.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
+            attendanceList = attendanceList.Where(x => x.Student_Course_Registration.Id.Equals(uId, StringComparison.OrdinalIgnoreCase)).ToList();
             return View(attendanceList);
         }
 
