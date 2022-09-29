@@ -10,6 +10,8 @@ using AMS.ViewModels.Student;
 using static QRCoder.PayloadGenerator;
 using NuGet.Common;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using MessagePack.Resolvers;
+using System.Numerics;
 
 namespace AMS.Controllers
 {
@@ -289,26 +291,46 @@ namespace AMS.Controllers
                 }
                 courseReg.Add(selectList);
             }
-            ViewBag.Courses = courseReg;
+            ViewBag.CourseData = courseReg;
             return View();
         }
 
         public async Task<JsonResult> GetGraphDetails(string Uid)
         {
-            var studentCourseRegit = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
-            if (!string.IsNullOrEmpty(Uid) && studentCourseRegit != null && studentCourseRegit.Count > 0)
+
+            if (!string.IsNullOrEmpty(Uid))
             {
-                var studentsAttendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
-                var currentStudentSub = studentCourseRegit.FirstOrDefault(x => x.Id.Equals(Uid, StringComparison.OrdinalIgnoreCase));
-                if (currentStudentSub != null)
+                var studentCourseRegit = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+                if (studentCourseRegit.Count <= 0)
                 {
-                    var totalCount = currentStudentSub.Course_Section_Faculty.TotalCount;
+                    return Json(string.Empty);
+                }
+                var currentStudentSub = studentCourseRegit.FirstOrDefault(x => x.Id.Equals(Uid, StringComparison.OrdinalIgnoreCase));
+                if (currentStudentSub == null)
+                {
+                    return Json(string.Empty);
+                }
+                //Need to get Total from below list of Course_Section_Faculty
+                var courserSectionFaculty = await dbOperations.GetAllData<Course_Section_Faculty>("Course_Section_Faculty");
+                if (courserSectionFaculty.Count <= 0)
+                {
+                    return Json(string.Empty);
+                }
+                var currentcourserSectionFaculty = courserSectionFaculty.FirstOrDefault(x => x.Id == currentStudentSub.Course_Section_Faculty.Id);
+                if (currentcourserSectionFaculty == null)
+                {
+                    return Json(string.Empty);
+                }
+                if (courserSectionFaculty.Count > 0 && currentStudentSub.Course_Section_Faculty != null)
+                {
+                    var totalCount = currentcourserSectionFaculty.TotalCount;
+                    var studentsAttendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
                     var attendedCount = studentsAttendance.Where(x => x.Student_Course_Registration.Id.Equals(currentStudentSub.Id, StringComparison.OrdinalIgnoreCase) && x.Student_Course_Registration.Student.Email.Equals(currentStudentSub.Student.Email, StringComparison.OrdinalIgnoreCase)).Count();
-                    Dictionary<string, int> keyValuePairs = new Dictionary<string, int>();
+                    Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>();
                     int percentage = 0;
-                    if (totalCount > attendedCount)
+                    if (totalCount >= attendedCount)
                     {
-                        percentage = (attendedCount / totalCount) * 100;
+                        percentage = (int)Math.Round((double)(100 * attendedCount) / totalCount);
                     }
                     keyValuePairs.Add("totalCount", totalCount);
                     keyValuePairs.Add("attendedCount", attendedCount);
@@ -319,54 +341,6 @@ namespace AMS.Controllers
             return Json(string.Empty);
         }
 
-        private async Task<List<ShowMyRegCourse>> GetMyRegCourse()
-        {
-            List<ShowMyRegCourse> showMyRegCourse = new List<ShowMyRegCourse>();
-            var email = HttpContext.Session.GetString("UserEmail");
-            var studentCourseReg = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
-            studentCourseReg = studentCourseReg.Where(x => x.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).ToList();
-            if (studentCourseReg != null && studentCourseReg.Count > 0)
-            {
-                var studentsAttendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
-
-                foreach (var course in studentCourseReg)
-                {
-                    var totalCount = course.Course_Section_Faculty.TotalCount;
-                    var attendedCount = studentsAttendance.Where(x => x.Student_Course_Registration.Id.Equals(course.Id, StringComparison.OrdinalIgnoreCase) && x.Student_Course_Registration.Student.Email.Equals(email, StringComparison.OrdinalIgnoreCase)).Count();
-                    int percentage = 0;
-                    if (totalCount > attendedCount)
-                    {
-                        percentage = (attendedCount / totalCount) * 100;
-                    }
-                    ShowMyRegCourse showMyReg = new()
-                    {
-                        GraphName = course.Course_Section_Faculty.Course.Name,
-                        UId = course.Id,
-                        Data = new Root
-                        {
-                            type = "doughnut",
-                            indexLabelFontFamily = "Heebo",
-                            indexLabelFontSize = 15,
-                            indexLabel = "{label} {y}%",
-                            startAngle = -20,
-                            showInLegend = true,
-                            toolTipContent = "{legendText} {y}%",
-                            dataPoints = new List<DataPoint>
-                            {
-                                new DataPoint
-                                {
-                                    label="Total Classes",
-                                    legendText="Classes Attended",
-                                    y=percentage
-                                }
-                            }
-                        }
-                    };
-                    showMyRegCourse.Add(showMyReg);
-                }
-            }
-            return showMyRegCourse;
-        }
 
         public async Task<IActionResult> ViewMyAttendance(string uId)
         {
@@ -554,9 +528,10 @@ namespace AMS.Controllers
             if (data != null && data.Count > 0)
             {
                 var currentRecord = data.FirstOrDefault(x => x.Id.Equals(uId, StringComparison.OrdinalIgnoreCase));
-                if (currentRecord != null)
+                if (currentRecord != null && currentRecord.LastClassOn.Date < DateTime.UtcNow.Date)
                 {
                     currentRecord.TotalCount += 1;
+                    currentRecord.LastClassOn = DateTime.UtcNow;
                     var result = await dbOperations.UpdateData<Course_Section_Faculty>(currentRecord.Id, currentRecord, "Course_Section_Faculty");
                     if (result != null)
                     {

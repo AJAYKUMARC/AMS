@@ -29,7 +29,7 @@
                     <div class="row mb-3" style="float:left;width:33%">
                         <div class="form-floating mb-3">
                             @Html.DropDownList("Course", (List
-                            <SelectListItem>)ViewBag.Courses, new { @class="form-select",@id="Course", @onchange="renderChart(this.value)"})
+                            <SelectListItem>)ViewBag.CourseData, new { @class="form-select",@id="Course", @onchange="renderChart(this.value)"})
                             <label for="Course">Course</label>
                         </div>
                     </div>
@@ -94,7 +94,7 @@
             success: function (result) {
                 myChart.data.datasets[0].data[0] = result.totalCount;
                 myChart.data.datasets[0].data[1] = result.attendedCount;
-                $('#percentage').text(result.attendedCount + "%")
+                $('#percentage').text(result.percentage + "%")
                 var name = $('#Course').find(":selected").text();
                 $('#className').text(name);
                 myChart.update();
