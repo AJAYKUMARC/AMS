@@ -105,10 +105,9 @@ namespace AMS.Controllers
                     viewDetails = new ViewDetails
                     {
                         Course_Section_Faculty = selectedCourseDetails,
-                        AttendanceList = attendanceLise.Where(x => x.Student_Course_Registration.Course_Section_Faculty.Id == data).ToList()
+                        AttendanceList = attendanceLise.Where(x => x.Student_Course_Registration.Course_Section_Faculty.Id == data).OrderBy(x => x.Student_Course_Registration.Student.Email).ToList()
                     };
                 }
-
                 return View(viewDetails);
             }
             catch (Exception ex)
@@ -174,7 +173,8 @@ namespace AMS.Controllers
             IList<StudentRegistrationViewModel> studentRegistrationViewModel = new List<StudentRegistrationViewModel>();
             foreach (var sCourse in scheduledCourses)
             {
-                var data = courseRegistered.FirstOrDefault(x => x.Course_Section_Faculty.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Faculty.Id.Equals(sCourse.Faculty.Id, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Section.Id.Equals(sCourse.Section.Id, StringComparison.OrdinalIgnoreCase));
+                var data = courseRegistered.FirstOrDefault(x => x.Course_Section_Faculty.Id.Equals(sCourse.Id));
+                //var data = courseRegistered.FirstOrDefault(x => x.Course_Section_Faculty.Course.Id.Equals(sCourse.Course.Id, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Faculty.Id.Equals(sCourse.Faculty.Id, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Section.Id.Equals(sCourse.Section.Id, StringComparison.OrdinalIgnoreCase));
                 if (courseRegistered.Count > 0 && data != null)
                 {
                     var courseRegisteredId = data.Id;
@@ -253,12 +253,27 @@ namespace AMS.Controllers
                     //Message with Error
                     return RedirectToAction("StudentRegistration");
                 }
-                var result = await dbOperations.DeleteData(data, "Student_Course_Registration");
-                if (!result)
+                var studentAttendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+                var studentCourseReg = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+                if (studentCourseReg != null && studentCourseReg.Count > 0)
                 {
-                    //Message with Error
-                    return RedirectToAction("StudentRegistration");
+                    var id = studentCourseReg.FirstOrDefault(x => x.Id.Equals(data, StringComparison.OrdinalIgnoreCase))?.Id;
+                    if (studentAttendance != null && studentAttendance.Count > 0)
+                    {
+                        studentAttendance = studentAttendance.Where(x => x.Student_Course_Registration.Id.Equals(id)).ToList();
+                        foreach (var attendance in studentAttendance)
+                        {
+                            var attendanceResult = await dbOperations.DeleteData(attendance.Id, "Students_Attendance");
+                        }
+                    }
+                    var result = await dbOperations.DeleteData(data, "Student_Course_Registration");
+                    if (!result)
+                    {
+                        //Message with Error
+                        return RedirectToAction("StudentRegistration");
+                    }
                 }
+
                 return RedirectToAction("StudentRegistration");
             }
             catch (Exception)
@@ -269,6 +284,27 @@ namespace AMS.Controllers
         #endregion StudentCourseRegistration
 
         #region Attendance       
+
+        public async Task<string> GetAttendancePercentage(string studentEmail, string Uid)
+        {
+
+            var studentCourseReg = await dbOperations.GetAllData<Student_Course_Registration>("Student_Course_Registration");
+            if (studentCourseReg.Count > 0)
+            {
+                var currentStudentCourse = studentCourseReg.FirstOrDefault(x => x.Student.Email.Equals(studentEmail, StringComparison.OrdinalIgnoreCase) && x.Course_Section_Faculty.Id == Uid);
+                if (currentStudentCourse != null)
+                {
+                    var totalCount = currentStudentCourse.Course_Section_Faculty.TotalCount;
+                    var attendanceList = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
+                    attendanceList = attendanceList.Where(x => x.Student_Course_Registration.Course_Section_Faculty.Id.Equals(currentStudentCourse.Course_Section_Faculty.Id) && x.Student_Course_Registration.Student.Email.Equals(studentEmail, StringComparison.OrdinalIgnoreCase) && x.IsApproved).ToList();
+                    var percentage = (int)Math.Round((double)(100 * attendanceList.Count) / totalCount);
+                    return percentage.ToString();
+                }
+            }
+
+            return "";
+        }
+
         [HttpGet]
         public async Task<IActionResult> ShowMyRegCourse()
         {
@@ -325,22 +361,33 @@ namespace AMS.Controllers
                 {
                     var totalCount = currentcourserSectionFaculty.TotalCount;
                     var studentsAttendance = await dbOperations.GetAllData<Students_Attendance>("Students_Attendance");
-                    var attendedCount = studentsAttendance.Where(x => x.Student_Course_Registration.Id.Equals(currentStudentSub.Id, StringComparison.OrdinalIgnoreCase) && x.Student_Course_Registration.Student.Email.Equals(currentStudentSub.Student.Email, StringComparison.OrdinalIgnoreCase)).Count();
+                    var attendedCount = studentsAttendance.Where(x => x.Student_Course_Registration.Course_Section_Faculty.Id.Equals(currentStudentSub.Course_Section_Faculty.Id, StringComparison.OrdinalIgnoreCase) && x.Student_Course_Registration.Student.Email.Equals(currentStudentSub.Student.Email, StringComparison.OrdinalIgnoreCase) && x.IsApproved).Count();
                     Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>();
                     int percentage = 0;
                     if (totalCount >= attendedCount)
                     {
                         percentage = (int)Math.Round((double)(100 * attendedCount) / totalCount);
+                        if (percentage < 0)
+                        {
+                            percentage = 0;
+                        }
                     }
+
                     keyValuePairs.Add("totalCount", totalCount);
                     keyValuePairs.Add("attendedCount", attendedCount);
-                    keyValuePairs.Add("percentage", percentage);
+                    if (totalCount <= 0)
+                    {
+                        keyValuePairs.Add("percentage", "Class not yet started");
+                    }
+                    else
+                    {
+                        keyValuePairs.Add("percentage", percentage.ToString() + "%");
+                    }
                     return Json(keyValuePairs);
                 }
             }
             return Json(string.Empty);
         }
-
 
         public async Task<IActionResult> ViewMyAttendance(string uId)
         {

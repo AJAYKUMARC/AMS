@@ -52,7 +52,7 @@
                         {
                             <tr>
                                 <td>@listItem.Student_Course_Registration.Student.Name</td>
-                                <td>@listItem.Student_Course_Registration.Student.Email</td>
+                                <td><a href="#" onclick="GetPercentage('@listItem.Student_Course_Registration.Student.Email','@Model.Course_Section_Faculty.Id')">@listItem.Student_Course_Registration.Student.Email</a></td>
                                 @if (@listItem.IsAttended)
                                 {
                                     <td><h6>Attended</h6></td>
@@ -91,3 +91,18 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    function GetPercentage(email, Id) {
+        console.log(email);
+        console.log(Id);
+        var url = '@Url.Action("GetAttendancePercentage","AMS")';
+        url = url + "?studentEmail=" + email + "&Uid=" + Id;
+        $.ajax({
+            url: url,
+            async: false,
+            success: function (result) {
+                alert('Current Percentage of the student :' + email + " is " + result);
+            }
+        });
+    }
+</script>

@@ -49,7 +49,7 @@
                 <h6 id="className" class="mb-4">Attendance Chart</h6>
                 <canvas id="doughnut-chart"></canvas>
                 <div id='percentage' class="label-text">
-                    0 %
+                    0
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@
             success: function (result) {
                 myChart.data.datasets[0].data[0] = result.totalCount;
                 myChart.data.datasets[0].data[1] = result.attendedCount;
-                $('#percentage').text(result.percentage + "%")
+                $('#percentage').text(result.percentage)
                 var name = $('#Course').find(":selected").text();
                 $('#className').text(name);
                 myChart.update();
